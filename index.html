@@ -9,6 +9,11 @@
   <!-- Supabase JS Client -->
   <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
+    :root {
+      --curve: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --duration: 0.5s;
+    }
+
     body {
       background: linear-gradient(135deg, #f5f5f7 0%, #e2e8f0 100%);
       min-height: 100vh;
@@ -41,6 +46,39 @@
     #calendar-touch-area {
       touch-action: pan-y;
       user-select: none;
+    }
+
+    /* --- CSS Grid & FLIP для Альбома --- */
+    .grid-container {
+      display: grid;
+      width: 100%;
+      transition: gap var(--duration) var(--curve);
+    }
+
+    .scale-1 { grid-template-columns: 1fr; gap: 16px; }
+    .scale-2 { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .scale-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }  /* 2x2 */
+    .scale-9 { grid-template-columns: repeat(3, 1fr); gap: 10px; }  /* 3x3 */
+    .scale-12 { grid-template-columns: repeat(4, 1fr); gap: 8px; }  /* 4x3 */
+
+    .album-card {
+      aspect-ratio: 1 / 1;
+      will-change: transform, opacity;
+      user-select: none;
+    }
+
+    .album-card:hover {
+      transform: scale(1.03) translateY(-2px) !important;
+      transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+      z-index: 10;
+    }
+
+    .scale-9 .card-caption, .scale-12 .card-caption {
+      font-size: 0.65rem;
+      padding: 0.25rem;
+    }
+    .scale-9 .card-date, .scale-12 .card-date {
+      font-size: 0.6rem;
     }
   </style>
 </head>
@@ -179,11 +217,25 @@
     <!-- 5. Альбом -->
     <main id="album" class="hidden space-y-6">
       <div class="glass rounded-3xl p-6 shadow-md">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <h2 class="text-xl font-bold">Фотоальбом</h2>
-          <button onclick="toggleModal('photo-modal')" class="bg-red-600 text-white text-xs px-4 py-2 rounded-full font-medium shadow hover:bg-red-700 transition">+ Добавить фото</button>
+          
+          <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <!-- Панель переключения сетки -->
+            <div class="flex gap-1 bg-white/50 p-1 rounded-2xl border border-white/60 text-xs font-semibold">
+              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="updateAlbumScale(1, this)">1</button>
+              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="updateAlbumScale(2, this)">2</button>
+              <button class="album-scale-btn active px-2.5 py-1 rounded-xl bg-red-600 text-white shadow-sm transition" onclick="updateAlbumScale(4, this)">4</button>
+              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="updateAlbumScale(9, this)">9</button>
+              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="updateAlbumScale(12, this)">12</button>
+            </div>
+
+            <button onclick="toggleModal('photo-modal')" class="bg-red-600 text-white text-xs px-4 py-2 rounded-full font-medium shadow hover:bg-red-700 transition ml-auto sm:ml-0">+ Фото</button>
+          </div>
         </div>
-        <div id="photos-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+        <!-- Контейнер сетки альбома -->
+        <div id="photos-grid" class="grid-container scale-4"></div>
       </div>
     </main>
 
@@ -275,8 +327,10 @@
     let calendarDate = new Date();
     let allPairEvents = [];
     let selectedFiles = [];
+    let loadedPhotosCache = [];
+    let currentAlbumScale = 4;
 
-    // Уровни зума: 1 месяц, 4 месяца, 9 месяцев, 12 месяцев (весь год)
+    // Уровни зума календаря
     const ZOOM_MODES = [1, 4, 9, 12];
     let currentZoomIndex = 0; 
 
@@ -499,7 +553,7 @@
     }
 
     // --- РЕНДЕР КАЛЕНДАРЯ И МАСШТАБИРОВАНИЯ ---
-    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Апрель", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
 
     function renderCalendar() {
       const monthsCount = ZOOM_MODES[currentZoomIndex];
@@ -562,7 +616,6 @@
       let startMonth = calendarDate.getMonth();
       let startYear = calendarDate.getFullYear();
 
-      // Если режим на весь год (12 месяцев), показываем год с января по декабрь
       if (count === 12) {
         startMonth = 0;
         document.getElementById('calendar-month-year').innerText = `Год ${startYear}`;
@@ -573,7 +626,6 @@
       const container = document.getElementById('multi-month-view');
       container.innerHTML = '';
 
-      // Настройка колонок сетки адаптивно под количество месяцев
       container.className = "grid gap-3 ";
       if (count === 4) container.className += "grid-cols-1 md:grid-cols-2";
       else if (count === 9) container.className += "grid-cols-1 md:grid-cols-3";
@@ -615,13 +667,11 @@
       renderCalendarEventsList(getCalculatedEventsForYear(startYear), startMonth, count);
     }
 
-    // Переключение режимов масштабирования (по кругу)
     function cycleCalendarZoom(step = 1) {
       currentZoomIndex = (currentZoomIndex + step + ZOOM_MODES.length) % ZOOM_MODES.length;
       renderCalendar();
     }
 
-    // --- ОБРАБОТКА СВАЙПОВ И ЩИПКА (PINCH TO ZOOM) ---
     function initCalendarTouchEvents() {
       const area = document.getElementById('calendar-touch-area');
       let touchStartX = 0;
@@ -645,10 +695,9 @@
           const deltaX = e.changedTouches[0].clientX - touchStartX;
           const deltaY = e.changedTouches[0].clientY - touchStartY;
 
-          // Горизонтальный свайп меняет месяц / период
           if (Math.abs(deltaX) > 50 && Math.abs(deltaY) < 40) {
-            if (deltaX < 0) changeMonth(1);  // Влево -> вперед
-            else changeMonth(-1);            // Вправо -> назад
+            if (deltaX < 0) changeMonth(1);
+            else changeMonth(-1);
           }
         }
         initialPinchDistance = null;
@@ -663,14 +712,12 @@
 
           const diff = currentDistance - initialPinchDistance;
 
-          // Щипок внутрь (Сжатие пальцев) -> уменьшение масштаба (больше месяцев)
           if (diff < -50) {
             if (currentZoomIndex < ZOOM_MODES.length - 1) {
               cycleCalendarZoom(1);
             }
             initialPinchDistance = null;
           } 
-          // Щипок наружу (Раздвижение пальцев) -> увеличение масштаба (меньше месяцев)
           else if (diff > 50) {
             if (currentZoomIndex > 0) {
               cycleCalendarZoom(-1);
@@ -741,7 +788,7 @@
       renderCalendar();
     }
 
-    // --- АЛЬБОМ И ФОТО ---
+    // --- АЛЬБОМ, ФОТО И FLIP-СЕТКА ---
     function handleFileSelect(event) {
       const files = Array.from(event.target.files);
       files.forEach(file => {
@@ -821,21 +868,89 @@
 
     async function loadPhotos() {
       const { data: photos } = await db.from('photos').select('*').eq('pair_id', currentPair.id).order('photo_date', { ascending: false });
+      loadedPhotosCache = photos || [];
+      renderPhotosGrid(currentAlbumScale);
+    }
+
+    function updateAlbumScale(count, btnElement) {
+      if (btnElement) {
+        document.querySelectorAll('.album-scale-btn').forEach(b => {
+          b.classList.remove('active', 'bg-red-600', 'text-white', 'shadow-sm');
+        });
+        btnElement.classList.add('active', 'bg-red-600', 'text-white', 'shadow-sm');
+      }
+
+      const grid = document.getElementById('photos-grid');
+      const items = Array.from(grid.children);
+      const firstPositions = items.map(item => item.getBoundingClientRect());
+
+      grid.className = `grid-container scale-${count}`;
+      currentAlbumScale = count;
+
+      renderPhotosGrid(count);
+
+      const newItems = Array.from(grid.children);
+      const duration = 500;
+
+      newItems.forEach((item, index) => {
+        const lastPos = item.getBoundingClientRect();
+        const firstPos = firstPositions[index];
+
+        if (firstPos && firstPos.width > 0) {
+          const deltaX = firstPos.left - lastPos.left;
+          const deltaY = firstPos.top - lastPos.top;
+          const deltaW = firstPos.width / lastPos.width;
+          const deltaH = firstPos.height / lastPos.height;
+
+          item.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
+          item.style.transition = 'none';
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              item.style.transition = `transform ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity ${duration}ms ease`;
+              item.style.transform = 'translate(0, 0) scale(1, 1)';
+            });
+          });
+        } else {
+          item.style.opacity = '0';
+          item.style.transform = 'scale(0.3) translateY(20px)';
+          item.style.transition = 'none';
+
+          const delay = index * 25;
+
+          setTimeout(() => {
+            requestAnimationFrame(() => {
+              item.style.transition = `transform ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity ${duration}ms ease`;
+              item.style.opacity = '1';
+              item.style.transform = 'scale(1) translateY(0)';
+            });
+          }, Math.max(0, delay));
+        }
+      });
+    }
+
+    function renderPhotosGrid(count) {
       const grid = document.getElementById('photos-grid');
       grid.innerHTML = '';
 
-      if (photos) {
-        photos.forEach(ph => {
-          grid.innerHTML += `
-            <div class="glass rounded-2xl overflow-hidden shadow-sm transform transition hover:scale-[1.02]">
-              <img src="${ph.photo_url}" class="w-full h-48 object-cover">
-              <div class="p-3">
-                <span class="text-xs text-red-600 font-medium">${ph.photo_date}</span>
-                <p class="text-sm text-slate-700 font-medium mt-1">${ph.caption || ''}</p>
-              </div>
-            </div>`;
-        });
+      if (!loadedPhotosCache || loadedPhotosCache.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-sm">В альбоме пока нет фотографий. Нажмите "+ Фото", чтобы добавить первые воспоминания.</div>`;
+        return;
       }
+
+      const displayPhotos = loadedPhotosCache.slice(0, count === 1 ? loadedPhotosCache.length : count);
+
+      displayPhotos.forEach(ph => {
+        const div = document.createElement('div');
+        div.className = "album-card glass rounded-2xl overflow-hidden shadow-sm flex flex-col relative group";
+        div.innerHTML = `
+          <img src="${ph.photo_url}" class="w-full h-full object-cover">
+          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 flex flex-col justify-end text-white">
+            <span class="card-date text-[10px] text-red-300 font-medium">${ph.photo_date}</span>
+            ${ph.caption ? `<p class="card-caption text-xs font-medium truncate">${ph.caption}</p>` : ''}
+          </div>`;
+        grid.appendChild(div);
+      });
     }
 
     // --- ВСПOМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
