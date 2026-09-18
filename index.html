@@ -235,18 +235,23 @@
 
     // --- НАСТРОЙКА ПАРЫ ---
     async function createPair() {
-      const firstDate = document.getElementById('setup-date').value;
-      if(!firstDate) return alert("Укажите дату знакомства");
+  const firstDate = document.getElementById('setup-date').value;
+  if (!firstDate) return alert("Укажите дату знакомства");
 
-      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const { data: pair, error } = await db.from('pairs').insert([{ pair_code: code, first_date: firstDate }]).select().single();
-      
-      if (error) return alert(error.message);
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const { data: pair, error } = await db.from('pairs').insert([{ pair_code: code, first_date: firstDate }]).select().single();
+  
+  if (error) return alert(error.message);
 
-      await db.from('profiles').update({ pair_id: pair.id }).eq('id', currentUser.id);
-      alert(`Ваш код пары: ${code}. Передайте его вашей второй половинке!`);
-      await loadUserData();
-    }
+  // Привязываем пару к текущему пользователю
+  const { error: profileErr } = await db.from('profiles').update({ pair_id: pair.id }).eq('id', currentUser.id);
+  if (profileErr) return alert(profileErr.message);
+
+  alert(Ваш код пары: ${code}. Передайте его вашей второй половинке!);
+  
+  // Автоматически перезагружаем данные и переходим на главный экран
+  await loadUserData();
+}
 
     async function joinPair() {
       const code = document.getElementById('pair-code-input').value.trim().toUpperCase();
