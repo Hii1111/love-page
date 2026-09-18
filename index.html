@@ -42,23 +42,18 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    #calendar-touch-area {
+    #calendar-touch-area, #album-touch-area {
       touch-action: pan-y;
       user-select: none;
     }
 
-    /* --- CSS Grid & Анимации для Альбома --- */
-    .album-grid-container {
+    /* Адаптивная сетка альбома */
+    .album-grid {
       display: grid;
       width: 100%;
-      transition: gap var(--duration) var(--curve);
+      gap: 12px;
+      transition: all var(--duration) var(--curve);
     }
-
-    .scale-1 { grid-template-columns: 1fr; gap: 16px; }
-    .scale-2 { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .scale-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .scale-9 { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .scale-12 { grid-template-columns: repeat(4, 1fr); gap: 8px; }
 
     .album-card {
       aspect-ratio: 1 / 1;
@@ -70,14 +65,6 @@
     .album-card:hover {
       transform: scale(1.03) translateY(-2px);
       z-index: 10;
-    }
-
-    .scale-9 .card-caption, .scale-12 .card-caption {
-      font-size: 0.65rem;
-      padding: 0.15rem;
-    }
-    .scale-9 .card-date, .scale-12 .card-date {
-      font-size: 0.55rem;
     }
   </style>
 </head>
@@ -101,11 +88,14 @@
           ⋮
         </button>
 
-        <div id="more-menu" class="hidden absolute right-0 mt-2 w-48 glass bg-white/90 rounded-2xl shadow-xl p-2 border border-slate-200/80 z-50 text-xs space-y-1">
+        <div id="more-menu" class="hidden absolute right-0 mt-2 w-52 glass bg-white/95 rounded-2xl shadow-xl p-2 border border-slate-200/80 z-50 text-xs space-y-1">
           <div onclick="copyPairCode(); closeMenu();" class="cursor-pointer hover:bg-slate-100 p-2.5 rounded-xl flex items-center justify-between text-slate-700 font-medium transition">
             <span>Код пары:</span>
             <span id="header-pair-code" class="text-red-600 font-bold">------</span>
           </div>
+          <button onclick="toggleModal('profile-modal'); closeMenu();" class="w-full text-left p-2.5 hover:bg-slate-100 text-slate-700 rounded-xl font-medium transition flex items-center gap-2">
+            <span>⚙️</span> Настройки профиля
+          </button>
           <div class="border-t border-slate-200/60 my-1"></div>
           <button onclick="toggleModal('unlink-modal'); closeMenu();" class="w-full text-left p-2.5 hover:bg-red-50 text-red-600 rounded-xl font-medium transition flex items-center gap-2">
             <span>💔</span> Разорвать связь
@@ -161,10 +151,30 @@
 
     <!-- 3. Главный Дашборд -->
     <main id="dashboard" class="hidden space-y-6">
-      <div class="glass rounded-3xl p-8 text-center shadow-lg transform transition hover:scale-[1.01]">
-        <span class="inline-block bg-red-100 text-red-600 text-xs px-3 py-1 rounded-full mb-3 font-semibold">Мы вместе</span>
-        <h1 id="days-counter" class="text-5xl font-extrabold text-slate-900 my-2">0</h1>
-        <p class="text-slate-500 text-sm">дней наполненных любовью ❤️</p>
+      <div class="glass rounded-3xl p-6 shadow-lg text-center relative overflow-hidden">
+        <div class="flex items-center justify-center gap-4 sm:gap-8 mb-6">
+          <div class="flex flex-col items-center">
+            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-red-500/50 shadow-md bg-white/80 mb-2 flex items-center justify-center">
+              <img id="p1-avatar" src="" class="w-full h-full object-cover hidden">
+              <span id="p1-avatar-placeholder" class="text-2xl sm:text-3xl">👤</span>
+            </div>
+            <span id="p1-name-display" class="font-bold text-sm sm:text-base text-slate-800">Он</span>
+          </div>
+
+          <div class="text-2xl sm:text-3xl animate-pulse text-red-500">❤️</div>
+
+          <div class="flex flex-col items-center">
+            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-red-500/50 shadow-md bg-white/80 mb-2 flex items-center justify-center">
+              <img id="p2-avatar" src="" class="w-full h-full object-cover hidden">
+              <span id="p2-avatar-placeholder" class="text-2xl sm:text-3xl">👤</span>
+            </div>
+            <span id="p2-name-display" class="font-bold text-sm sm:text-base text-slate-800">Она</span>
+          </div>
+        </div>
+
+        <span class="inline-block bg-red-100 text-red-600 text-xs px-3.5 py-1.5 rounded-full mb-2 font-semibold">Мы вместе</span>
+        <h1 id="days-counter" class="text-3xl sm:text-4xl font-extrabold text-slate-900 my-2">0 дней</h1>
+        <p class="text-slate-500 text-xs sm:text-sm">наполненных любовью и счастьем</p>
       </div>
 
       <div class="glass rounded-3xl p-6 shadow-md">
@@ -188,13 +198,12 @@
           </div>
           <div class="flex items-center gap-2">
             <button id="zoom-toggle-btn" onclick="cycleCalendarZoom(1)" class="bg-white/70 hover:bg-white text-xs px-3.5 py-2 rounded-full font-semibold shadow-sm border border-slate-200/60 transition">
-              🔍 1 Месяц
+              1 Месяц
             </button>
             <button onclick="toggleModal('event-modal')" class="bg-red-600 hover:bg-red-700 text-white text-xs px-4 py-2 rounded-full font-medium shadow transition">+ Событие</button>
           </div>
         </div>
 
-        <!-- Одиночный вид (1 мес) -->
         <div id="single-month-view">
           <div class="grid grid-cols-7 gap-1 text-center font-semibold text-xs text-slate-400 mb-2">
             <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
@@ -202,7 +211,6 @@
           <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
         </div>
 
-        <!-- Мульти-месячный вид (4, 9, 12 месяцев) -->
         <div id="multi-month-view" class="hidden"></div>
       </div>
 
@@ -214,29 +222,55 @@
 
     <!-- 5. Фотоальбом -->
     <main id="album" class="hidden space-y-6">
-      <div class="glass rounded-3xl p-6 shadow-md">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div id="album-touch-area" class="glass rounded-3xl p-6 shadow-md">
+        <div class="flex justify-between items-center gap-4 mb-6">
           <h2 class="text-xl font-bold">Фотоальбом</h2>
           
-          <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <!-- Переключатель масштаба сетки -->
-            <div class="flex gap-1 bg-white/60 p-1 rounded-2xl border border-slate-200/80 text-xs font-semibold">
-              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="setAlbumScale(1, this)">1</button>
-              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="setAlbumScale(2, this)">2</button>
-              <button class="album-scale-btn active px-2.5 py-1 rounded-xl bg-red-600 text-white shadow-sm transition" onclick="setAlbumScale(4, this)">4</button>
-              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="setAlbumScale(9, this)">9</button>
-              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="setAlbumScale(12, this)">12</button>
+          <div class="flex items-center gap-2">
+            <div class="flex items-center bg-white/70 rounded-full border border-slate-200/80 p-1 shadow-sm">
+              <button onclick="changeAlbumCols(-1)" title="Увеличить фото" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-700 font-bold text-sm transition">＋</button>
+              <span id="album-cols-indicator" class="text-xs font-semibold px-2 text-slate-500">3 в ряд</span>
+              <button onclick="changeAlbumCols(1)" title="Уменьшить фото" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-700 font-bold text-sm transition">－</button>
             </div>
 
-            <button onclick="toggleModal('photo-modal')" class="bg-red-600 text-white text-xs px-4 py-2 rounded-full font-medium shadow hover:bg-red-700 transition ml-auto sm:ml-0">+ Фото</button>
+            <button onclick="toggleModal('photo-modal')" class="bg-red-600 text-white text-xs px-4 py-2 rounded-full font-medium shadow hover:bg-red-700 transition">+ Фото</button>
           </div>
         </div>
 
-        <!-- Контейнер карточек фотоальбома -->
-        <div id="photos-grid" class="album-grid-container scale-4"></div>
+        <div id="photos-grid" class="album-grid"></div>
       </div>
     </main>
 
+  </div>
+
+  <!-- Модальное окно настроек профиля -->
+  <div id="profile-modal" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="glass bg-white/95 rounded-3xl p-6 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl">
+      <h3 class="font-bold text-lg text-slate-800">Настройки пары</h3>
+      
+      <div class="bg-white/50 p-4 rounded-2xl border border-slate-200/60 space-y-3">
+        <h4 class="text-xs font-bold text-slate-600 uppercase">Партнер 1</h4>
+        <input id="p1-name-input" type="text" placeholder="Имя" class="w-full p-2.5 rounded-xl glass text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+        <div>
+          <label class="block text-[11px] text-slate-500 mb-1">Фотография:</label>
+          <input id="p1-photo-input" type="file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-600 hover:file:bg-red-100">
+        </div>
+      </div>
+
+      <div class="bg-white/50 p-4 rounded-2xl border border-slate-200/60 space-y-3">
+        <h4 class="text-xs font-bold text-slate-600 uppercase">Партнер 2</h4>
+        <input id="p2-name-input" type="text" placeholder="Имя" class="w-full p-2.5 rounded-xl glass text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+        <div>
+          <label class="block text-[11px] text-slate-500 mb-1">Фотография:</label>
+          <input id="p2-photo-input" type="file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-600 hover:file:bg-red-100">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveProfileSettings()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-full text-sm font-semibold shadow-md transition">Сохранить</button>
+        <button onclick="toggleModal('profile-modal')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-full text-sm font-medium transition">Отмена</button>
+      </div>
+    </div>
   </div>
 
   <!-- Модальное окно создания события -->
@@ -326,8 +360,8 @@
     let allPairEvents = [];
     let selectedFiles = [];
     let loadedPhotosCache = [];
-    let currentAlbumScale = 4;
-
+    
+    let currentAlbumCols = 3;
     const ZOOM_MODES = [1, 4, 9, 12];
     let currentZoomIndex = 0; 
 
@@ -340,6 +374,7 @@
         showScreen('auth-screen');
       }
       initCalendarTouchEvents();
+      initAlbumTouchEvents();
     });
 
     function toggleMenu(event) {
@@ -455,13 +490,90 @@
       }
     }
 
-    async function renderDashboard() {
-      const start = new Date(currentPair.first_date);
+    function formatTimeTogether(startDateStr) {
+      const start = new Date(startDateStr);
       const now = new Date();
-      const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-      document.getElementById('days-counter').innerText = diffDays;
+
+      let years = now.getFullYear() - start.getFullYear();
+      let months = now.getMonth() - start.getMonth();
+      let days = now.getDate() - start.getDate();
+
+      if (days < 0) {
+        months -= 1;
+        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        days += prevMonth.getDate();
+      }
+      if (months < 0) {
+        years -= 1;
+        months += 12;
+      }
+
+      const parts = [];
+      if (years > 0) parts.push(`${years} ${getYearDeclension(years)}`);
+      if (months > 0) parts.push(`${months} ${getMonthDeclension(months)}`);
+      if (days > 0 || parts.length === 0) parts.push(`${days} ${getDayDeclension(days)}`);
+
+      return parts.join(' ');
+    }
+
+    async function renderDashboard() {
+      document.getElementById('days-counter').innerText = formatTimeTogether(currentPair.first_date);
+
+      const p1Name = currentPair.partner1_name || 'Партнер 1';
+      const p2Name = currentPair.partner2_name || 'Партнер 2';
+      
+      document.getElementById('p1-name-display').innerText = p1Name;
+      document.getElementById('p2-name-display').innerText = p2Name;
+
+      document.getElementById('p1-name-input').value = currentPair.partner1_name || '';
+      document.getElementById('p2-name-input').value = currentPair.partner2_name || '';
+
+      if (currentPair.partner1_photo) {
+        document.getElementById('p1-avatar').src = currentPair.partner1_photo;
+        document.getElementById('p1-avatar').classList.remove('hidden');
+        document.getElementById('p1-avatar-placeholder').classList.add('hidden');
+      }
+      if (currentPair.partner2_photo) {
+        document.getElementById('p2-avatar').src = currentPair.partner2_photo;
+        document.getElementById('p2-avatar').classList.remove('hidden');
+        document.getElementById('p2-avatar-placeholder').classList.add('hidden');
+      }
+
       await fetchAllEvents();
       renderUpcomingDashboardEvents();
+    }
+
+    async function saveProfileSettings() {
+      const p1Name = document.getElementById('p1-name-input').value;
+      const p2Name = document.getElementById('p2-name-input').value;
+
+      const p1File = document.getElementById('p1-photo-input').files[0];
+      const p2File = document.getElementById('p2-photo-input').files[0];
+
+      let p1PhotoUrl = currentPair.partner1_photo;
+      let p2PhotoUrl = currentPair.partner2_photo;
+
+      if (p1File) {
+        const path = `${currentPair.id}/p1_${Date.now()}.${p1File.name.split('.').pop()}`;
+        await db.storage.from('love-photos').upload(path, p1File, { upsert: true });
+        p1PhotoUrl = db.storage.from('love-photos').getPublicUrl(path).data.publicUrl;
+      }
+
+      if (p2File) {
+        const path = `${currentPair.id}/p2_${Date.now()}.${p2File.name.split('.').pop()}`;
+        await db.storage.from('love-photos').upload(path, p2File, { upsert: true });
+        p2PhotoUrl = db.storage.from('love-photos').getPublicUrl(path).data.publicUrl;
+      }
+
+      await db.from('pairs').update({
+        partner1_name: p1Name,
+        partner2_name: p2Name,
+        partner1_photo: p1PhotoUrl,
+        partner2_photo: p2PhotoUrl
+      }).eq('id', currentPair.id);
+
+      toggleModal('profile-modal');
+      await loadUserData();
     }
 
     function toggleYearlyOption() {
@@ -492,13 +604,12 @@
     function getCalculatedEventsForYear(year) {
       const events = [];
       const autoHolidays = [
-        { title: "🎄 Новый Год", date: `${year}-01-01` },
+        { title: "🎄 Новый Год (31 Декабря — 1 Января)", date: `${year}-01-01` },
         { title: "❤️ День Святого Валентина", date: `${year}-02-14` },
         { title: "🛡️ 23 Февраля", date: `${year}-02-23` },
         { title: "💐 8 Марта", date: `${year}-03-08` },
         { title: "🌿 1 Мая", date: `${year}-05-01` },
-        { title: "🎆 9 Мая", date: `${year}-05-09` },
-        { title: "🥂 31 Декабря", date: `${year}-12-31` }
+        { title: "🎆 9 Мая", date: `${year}-05-09` }
       ];
       autoHolidays.forEach(h => events.push({ title: h.title, event_date: h.date, is_auto: true }));
 
@@ -545,14 +656,14 @@
       });
     }
 
-    // --- СЕТКА И ЗУМ КАЛЕНДАРЯ ---
+    // --- КАЛЕНДАРЬ ---
     const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
 
     function renderCalendar() {
       const monthsCount = ZOOM_MODES[currentZoomIndex];
       const btn = document.getElementById('zoom-toggle-btn');
       
-      const labels = { 1: '🔍 1 Месяц', 4: '🔍 4 Месяца', 9: '🔍 9 Месяцев', 12: '🔍 12 Месяцев' };
+      const labels = { 1: '1 Месяц', 4: '4 Месяца (2×2)', 9: '9 Месяцев (3×3)', 12: '12 Месяцев (3×4)' };
       btn.innerText = labels[monthsCount];
 
       if (monthsCount === 1) {
@@ -620,9 +731,9 @@
       container.innerHTML = '';
 
       let gridClass = "grid gap-3 ";
-      if (count === 4) gridClass += "grid-cols-1 sm:grid-cols-2";
-      else if (count === 9) gridClass += "grid-cols-1 sm:grid-cols-2 md:grid-cols-3";
-      else if (count === 12) gridClass += "grid-cols-2 sm:grid-cols-3 md:grid-cols-4";
+      if (count === 4) gridClass += "grid-cols-2";
+      else if (count === 9) gridClass += "grid-cols-3";
+      else if (count === 12) gridClass += "grid-cols-3 md:grid-cols-4";
       container.className = gridClass;
 
       for (let m = 0; m < count; m++) {
@@ -643,15 +754,15 @@
           const fullDateStr = `${y}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           const hasEvent = eventsForMonth.some(e => e.event_date === fullDateStr);
           daysGrid += `
-            <div class="text-center py-0.5 text-[9px] ${hasEvent ? 'bg-red-100 font-bold text-red-600 rounded' : 'text-slate-600'}">
+            <div class="text-center py-0.5 text-[8px] sm:text-[9px] ${hasEvent ? 'bg-red-100 font-bold text-red-600 rounded' : 'text-slate-600'}">
               ${day}
             </div>`;
         }
 
         container.innerHTML += `
-          <div class="bg-white/40 p-2.5 rounded-2xl border border-white/50">
-            <h4 class="font-bold text-xs text-slate-800 mb-1.5 text-center">${monthNames[monthIdx]} ${y}</h4>
-            <div class="grid grid-cols-7 gap-0.5 text-[9px] font-semibold text-slate-400 mb-1 text-center">
+          <div class="bg-white/40 p-2 sm:p-2.5 rounded-2xl border border-white/50">
+            <h4 class="font-bold text-[11px] sm:text-xs text-slate-800 mb-1 text-center">${monthNames[monthIdx]}</h4>
+            <div class="grid grid-cols-7 gap-0.5 text-[8px] font-semibold text-slate-400 mb-0.5 text-center">
               <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
             </div>
             <div class="grid grid-cols-7 gap-0.5">${daysGrid}</div>
@@ -666,20 +777,49 @@
       renderCalendar();
     }
 
+    // ЖЕСТЫ ДЛЯ КАЛЕНДАРЯ (Свайпы + Pinch-to-Zoom)
     function initCalendarTouchEvents() {
       const area = document.getElementById('calendar-touch-area');
       let touchStartX = 0;
       let touchStartY = 0;
+      let initialPinchDistance = null;
 
       area.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) {
           touchStartX = e.touches[0].clientX;
           touchStartY = e.touches[0].clientY;
+        } else if (e.touches.length === 2) {
+          initialPinchDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+        }
+      }, { passive: true });
+
+      area.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initialPinchDistance !== null) {
+          const currentDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          const diff = currentDistance - initialPinchDistance;
+
+          if (diff < -40) { // Pinch Out (Сведение -> уменьшение/больше месяцев)
+            if (currentZoomIndex < ZOOM_MODES.length - 1) {
+              cycleCalendarZoom(1);
+            }
+            initialPinchDistance = null;
+          } else if (diff > 40) { // Pinch In (Разведение -> увеличение/меньше месяцев)
+            if (currentZoomIndex > 0) {
+              cycleCalendarZoom(-1);
+            }
+            initialPinchDistance = null;
+          }
         }
       }, { passive: true });
 
       area.addEventListener('touchend', (e) => {
-        if (e.changedTouches.length === 1) {
+        if (e.changedTouches.length === 1 && initialPinchDistance === null) {
           const deltaX = e.changedTouches[0].clientX - touchStartX;
           const deltaY = e.changedTouches[0].clientY - touchStartY;
 
@@ -688,6 +828,7 @@
             else changeMonth(-1);
           }
         }
+        initialPinchDistance = null;
       }, { passive: true });
     }
 
@@ -750,7 +891,7 @@
       renderCalendar();
     }
 
-    // --- ФОТОАЛЬБОМ, ЗАГРУЗКА И АНИМАЦИИ СЕТКИ ---
+    // --- ФОТОАЛЬБОМ И ЖЕСТЫ ---
     function handleFileSelect(event) {
       const files = Array.from(event.target.files);
       files.forEach(file => {
@@ -834,32 +975,60 @@
       renderPhotosGrid();
     }
 
-    function setAlbumScale(scale, btnElement) {
-      if (btnElement) {
-        document.querySelectorAll('.album-scale-btn').forEach(b => {
-          b.classList.remove('active', 'bg-red-600', 'text-white', 'shadow-sm');
-        });
-        btnElement.classList.add('active', 'bg-red-600', 'text-white', 'shadow-sm');
-      }
-
-      currentAlbumScale = scale;
-      const grid = document.getElementById('photos-grid');
-      grid.className = `album-grid-container scale-${scale}`;
+    function changeAlbumCols(delta) {
+      currentAlbumCols = Math.min(6, Math.max(2, currentAlbumCols + delta));
+      document.getElementById('album-cols-indicator').innerText = `${currentAlbumCols} в ряд`;
       renderPhotosGrid();
+    }
+
+    // ЖЕСТЫ ДЛЯ АЛЬБОМА (Pinch-to-Zoom)
+    function initAlbumTouchEvents() {
+      const area = document.getElementById('album-touch-area');
+      let initialPinchDistance = null;
+
+      area.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          initialPinchDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+        }
+      }, { passive: true });
+
+      area.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initialPinchDistance !== null) {
+          const currentDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          const diff = currentDistance - initialPinchDistance;
+
+          if (diff < -40) { // Pinch Out -> делать фото меньше (больше колонок)
+            changeAlbumCols(1);
+            initialPinchDistance = null;
+          } else if (diff > 40) { // Pinch In -> делать фото больше (меньше колонок)
+            changeAlbumCols(-1);
+            initialPinchDistance = null;
+          }
+        }
+      }, { passive: true });
+
+      area.addEventListener('touchend', () => {
+        initialPinchDistance = null;
+      }, { passive: true });
     }
 
     function renderPhotosGrid() {
       const grid = document.getElementById('photos-grid');
       grid.innerHTML = '';
+      grid.style.gridTemplateColumns = `repeat(${currentAlbumCols}, minmax(0, 1fr))`;
 
       if (!loadedPhotosCache || loadedPhotosCache.length === 0) {
         grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-sm">В альбоме пока нет фотографий. Нажмите "+ Фото", чтобы добавить первые кадры.</div>`;
         return;
       }
 
-      const displayPhotos = loadedPhotosCache.slice(0, currentAlbumScale === 1 ? loadedPhotosCache.length : currentAlbumScale);
-
-      displayPhotos.forEach((ph, idx) => {
+      loadedPhotosCache.forEach((ph, idx) => {
         const div = document.createElement('div');
         div.className = "album-card glass rounded-2xl overflow-hidden shadow-sm flex flex-col relative group cursor-pointer";
         div.style.opacity = '0';
@@ -867,9 +1036,9 @@
 
         div.innerHTML = `
           <img src="${ph.photo_url}" class="w-full h-full object-cover">
-          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 flex flex-col justify-end text-white">
-            <span class="card-date text-[10px] text-red-300 font-medium">${ph.photo_date}</span>
-            ${ph.caption ? `<p class="card-caption text-xs font-medium truncate">${ph.caption}</p>` : ''}
+          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 flex flex-col justify-end text-white opacity-0 group-hover:opacity-100 transition">
+            <span class="text-[10px] text-red-300 font-medium">${ph.photo_date}</span>
+            ${ph.caption ? `<p class="text-xs font-medium truncate">${ph.caption}</p>` : ''}
           </div>`;
         
         grid.appendChild(div);
@@ -879,7 +1048,7 @@
             div.style.opacity = '1';
             div.style.transform = 'scale(1) translateY(0)';
           });
-        }, idx * 40);
+        }, idx * 30);
       });
     }
 
@@ -905,6 +1074,18 @@
     function getYearDeclension(number) {
       const cases = [2, 0, 1, 1, 1, 2];
       const titles = ['год', 'года', 'лет'];
+      return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+    }
+
+    function getMonthDeclension(number) {
+      const cases = [2, 0, 1, 1, 1, 2];
+      const titles = ['месяц', 'месяца', 'месяцев'];
+      return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+    }
+
+    function getDayDeclension(number) {
+      const cases = [2, 0, 1, 1, 1, 2];
+      const titles = ['день', 'дня', 'дней'];
       return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
     }
   </script>
