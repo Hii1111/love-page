@@ -88,7 +88,8 @@
           ⋮
         </button>
 
-        <div id="more-menu" class="hidden absolute right-0 mt-2 w-52 glass bg-white/95 rounded-2xl shadow-xl p-2 border border-slate-200/80 z-50 text-xs space-y-1">
+        <!-- Выпадающее меню поверх всех элементов с четким контуром -->
+        <div id="more-menu" class="hidden absolute right-0 mt-2 w-52 glass bg-white/95 rounded-2xl shadow-2xl p-2 border-2 border-slate-300/90 z-[9999] text-xs space-y-1">
           <div onclick="copyPairCode(); closeMenu();" class="cursor-pointer hover:bg-slate-100 p-2.5 rounded-xl flex items-center justify-between text-slate-700 font-medium transition">
             <span>Код пары:</span>
             <span id="header-pair-code" class="text-red-600 font-bold">------</span>
@@ -777,7 +778,6 @@
       renderCalendar();
     }
 
-    // ЖЕСТЫ ДЛЯ КАЛЕНДАРЯ (Свайпы + Pinch-to-Zoom)
     function initCalendarTouchEvents() {
       const area = document.getElementById('calendar-touch-area');
       let touchStartX = 0;
@@ -804,12 +804,12 @@
           );
           const diff = currentDistance - initialPinchDistance;
 
-          if (diff < -40) { // Pinch Out (Сведение -> уменьшение/больше месяцев)
+          if (diff < -40) {
             if (currentZoomIndex < ZOOM_MODES.length - 1) {
               cycleCalendarZoom(1);
             }
             initialPinchDistance = null;
-          } else if (diff > 40) { // Pinch In (Разведение -> увеличение/меньше месяцев)
+          } else if (diff > 40) {
             if (currentZoomIndex > 0) {
               cycleCalendarZoom(-1);
             }
@@ -981,7 +981,6 @@
       renderPhotosGrid();
     }
 
-    // ЖЕСТЫ ДЛЯ АЛЬБОМА (Pinch-to-Zoom)
     function initAlbumTouchEvents() {
       const area = document.getElementById('album-touch-area');
       let initialPinchDistance = null;
@@ -1003,10 +1002,10 @@
           );
           const diff = currentDistance - initialPinchDistance;
 
-          if (diff < -40) { // Pinch Out -> делать фото меньше (больше колонок)
+          if (diff < -40) {
             changeAlbumCols(1);
             initialPinchDistance = null;
-          } else if (diff > 40) { // Pinch In -> делать фото больше (меньше колонок)
+          } else if (diff > 40) {
             changeAlbumCols(-1);
             initialPinchDistance = null;
           }
