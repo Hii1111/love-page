@@ -6,7 +6,7 @@
   <title>Наше Пространство ❤️</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase JS Client (стабильная сборка) -->
+  <!-- Supabase JS Client (исправленная CDN ссылка) -->
   <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     body {
@@ -176,13 +176,12 @@
     const SUPABASE_URL = 'https://etzicetyyzasnndbrrdi.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_D-GHN813c5wFRRSFMJ7N9g_g-90Wj48';
 
-    // Создаем клиент под именем db для исключения конфликтов глобальных имен
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let currentUser = null;
     let currentPair = null;
 
-    // --- ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ (КЭШ СЕССИИ) ---
+    // --- ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ ---
     window.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await db.auth.getSession();
       if (session) {
@@ -235,23 +234,20 @@
 
     // --- НАСТРОЙКА ПАРЫ ---
     async function createPair() {
-  const firstDate = document.getElementById('setup-date').value;
-  if (!firstDate) return alert("Укажите дату знакомства");
+      const firstDate = document.getElementById('setup-date').value;
+      if (!firstDate) return alert("Укажите дату знакомства");
 
-  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-  const { data: pair, error } = await db.from('pairs').insert([{ pair_code: code, first_date: firstDate }]).select().single();
-  
-  if (error) return alert(error.message);
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const { data: pair, error } = await db.from('pairs').insert([{ pair_code: code, first_date: firstDate }]).select().single();
+      
+      if (error) return alert(error.message);
 
-  // Привязываем пару к текущему пользователю
-  const { error: profileErr } = await db.from('profiles').update({ pair_id: pair.id }).eq('id', currentUser.id);
-  if (profileErr) return alert(profileErr.message);
+      const { error: profileErr } = await db.from('profiles').update({ pair_id: pair.id }).eq('id', currentUser.id);
+      if (profileErr) return alert(profileErr.message);
 
-  alert(Ваш код пары: ${code}. Передайте его вашей второй половинке!);
-  
-  // Автоматически перезагружаем данные и переходим на главный экран
-  await loadUserData();
-}
+      alert(`Ваш код пары: ${code}. Передайте его вашей второй половинке!`);
+      await loadUserData();
+    }
 
     async function joinPair() {
       const code = document.getElementById('pair-code-input').value.trim().toUpperCase();
