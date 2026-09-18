@@ -11,7 +11,7 @@
   <style>
     :root {
       --curve: cubic-bezier(0.34, 1.56, 0.64, 1);
-      --duration: 0.5s;
+      --duration: 0.4s;
     }
 
     body {
@@ -42,14 +42,13 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    /* Область календаря с поддержкой жестов */
     #calendar-touch-area {
       touch-action: pan-y;
       user-select: none;
     }
 
-    /* --- CSS Grid & FLIP для Альбома --- */
-    .grid-container {
+    /* --- CSS Grid & Анимации для Альбома --- */
+    .album-grid-container {
       display: grid;
       width: 100%;
       transition: gap var(--duration) var(--curve);
@@ -57,28 +56,28 @@
 
     .scale-1 { grid-template-columns: 1fr; gap: 16px; }
     .scale-2 { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .scale-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }  /* 2x2 */
-    .scale-9 { grid-template-columns: repeat(3, 1fr); gap: 10px; }  /* 3x3 */
-    .scale-12 { grid-template-columns: repeat(4, 1fr); gap: 8px; }  /* 4x3 */
+    .scale-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .scale-9 { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .scale-12 { grid-template-columns: repeat(4, 1fr); gap: 8px; }
 
     .album-card {
       aspect-ratio: 1 / 1;
       will-change: transform, opacity;
       user-select: none;
+      transition: transform var(--duration) var(--curve), opacity var(--duration) ease;
     }
 
     .album-card:hover {
-      transform: scale(1.03) translateY(-2px) !important;
-      transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+      transform: scale(1.03) translateY(-2px);
       z-index: 10;
     }
 
     .scale-9 .card-caption, .scale-12 .card-caption {
       font-size: 0.65rem;
-      padding: 0.25rem;
+      padding: 0.15rem;
     }
     .scale-9 .card-date, .scale-12 .card-date {
-      font-size: 0.6rem;
+      font-size: 0.55rem;
     }
   </style>
 </head>
@@ -102,7 +101,6 @@
           ⋮
         </button>
 
-        <!-- Всплывающее окошко -->
         <div id="more-menu" class="hidden absolute right-0 mt-2 w-48 glass bg-white/90 rounded-2xl shadow-xl p-2 border border-slate-200/80 z-50 text-xs space-y-1">
           <div onclick="copyPairCode(); closeMenu();" class="cursor-pointer hover:bg-slate-100 p-2.5 rounded-xl flex items-center justify-between text-slate-700 font-medium transition">
             <span>Код пары:</span>
@@ -180,23 +178,23 @@
     <!-- 4. Визуальный Календарь -->
     <main id="calendar" class="hidden space-y-6">
       <div id="calendar-touch-area" class="glass rounded-3xl p-6 shadow-md">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
           <div class="flex items-center space-x-4">
             <h2 id="calendar-month-year" class="text-xl font-bold">Месяц Год</h2>
             <div id="cal-nav-buttons" class="flex space-x-1">
-              <button onclick="changeMonth(-1)" class="px-3 py-1 rounded-full bg-white/60 hover:bg-white text-xs font-semibold">←</button>
-              <button onclick="changeMonth(1)" class="px-3 py-1 rounded-full bg-white/60 hover:bg-white text-xs font-semibold">→</button>
+              <button onclick="changeMonth(-1)" class="px-3 py-1 rounded-full bg-white/60 hover:bg-white text-xs font-semibold shadow-sm transition">←</button>
+              <button onclick="changeMonth(1)" class="px-3 py-1 rounded-full bg-white/60 hover:bg-white text-xs font-semibold shadow-sm transition">→</button>
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <button id="zoom-toggle-btn" onclick="cycleCalendarZoom(1)" class="bg-white/60 hover:bg-white text-xs px-3 py-2 rounded-full font-semibold transition">
+            <button id="zoom-toggle-btn" onclick="cycleCalendarZoom(1)" class="bg-white/70 hover:bg-white text-xs px-3.5 py-2 rounded-full font-semibold shadow-sm border border-slate-200/60 transition">
               🔍 1 Месяц
             </button>
             <button onclick="toggleModal('event-modal')" class="bg-red-600 hover:bg-red-700 text-white text-xs px-4 py-2 rounded-full font-medium shadow transition">+ Событие</button>
           </div>
         </div>
 
-        <!-- Одиночный вид месяца (1 мес) -->
+        <!-- Одиночный вид (1 мес) -->
         <div id="single-month-view">
           <div class="grid grid-cols-7 gap-1 text-center font-semibold text-xs text-slate-400 mb-2">
             <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
@@ -205,7 +203,7 @@
         </div>
 
         <!-- Мульти-месячный вид (4, 9, 12 месяцев) -->
-        <div id="multi-month-view" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <div id="multi-month-view" class="hidden"></div>
       </div>
 
       <div class="glass rounded-3xl p-6 shadow-md">
@@ -214,28 +212,28 @@
       </div>
     </main>
 
-    <!-- 5. Альбом -->
+    <!-- 5. Фотоальбом -->
     <main id="album" class="hidden space-y-6">
       <div class="glass rounded-3xl p-6 shadow-md">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <h2 class="text-xl font-bold">Фотоальбом</h2>
           
           <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <!-- Панель переключения сетки -->
-            <div class="flex gap-1 bg-white/50 p-1 rounded-2xl border border-white/60 text-xs font-semibold">
-              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="updateAlbumScale(1, this)">1</button>
-              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="updateAlbumScale(2, this)">2</button>
-              <button class="album-scale-btn active px-2.5 py-1 rounded-xl bg-red-600 text-white shadow-sm transition" onclick="updateAlbumScale(4, this)">4</button>
-              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="updateAlbumScale(9, this)">9</button>
-              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="updateAlbumScale(12, this)">12</button>
+            <!-- Переключатель масштаба сетки -->
+            <div class="flex gap-1 bg-white/60 p-1 rounded-2xl border border-slate-200/80 text-xs font-semibold">
+              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="setAlbumScale(1, this)">1</button>
+              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="setAlbumScale(2, this)">2</button>
+              <button class="album-scale-btn active px-2.5 py-1 rounded-xl bg-red-600 text-white shadow-sm transition" onclick="setAlbumScale(4, this)">4</button>
+              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="setAlbumScale(9, this)">9</button>
+              <button class="album-scale-btn px-2.5 py-1 rounded-xl transition" onclick="setAlbumScale(12, this)">12</button>
             </div>
 
             <button onclick="toggleModal('photo-modal')" class="bg-red-600 text-white text-xs px-4 py-2 rounded-full font-medium shadow hover:bg-red-700 transition ml-auto sm:ml-0">+ Фото</button>
           </div>
         </div>
 
-        <!-- Контейнер сетки альбома -->
-        <div id="photos-grid" class="grid-container scale-4"></div>
+        <!-- Контейнер карточек фотоальбома -->
+        <div id="photos-grid" class="album-grid-container scale-4"></div>
       </div>
     </main>
 
@@ -273,7 +271,7 @@
       <div onclick="document.getElementById('ph-files').click()" class="border-2 border-dashed border-red-300 hover:border-red-500 bg-red-50/50 hover:bg-red-50/80 transition rounded-2xl p-6 text-center cursor-pointer group">
         <div class="w-12 h-12 bg-red-100 group-hover:bg-red-200 text-red-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl transition">📷</div>
         <p class="text-sm font-semibold text-slate-700">Нажмите для выбора фото</p>
-        <p class="text-xs text-slate-400 mt-1">Можно выбрать несколько файлов сразу</p>
+        <p class="text-xs text-slate-400 mt-1">Можно выбрать несколько файлов</p>
         <input id="ph-files" type="file" accept="image/*" multiple onchange="handleFileSelect(event)" class="hidden">
       </div>
 
@@ -291,12 +289,12 @@
     </div>
   </div>
 
-  <!-- Окна предупреждения -->
+  <!-- Модальные окна подтверждений -->
   <div id="unlink-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="glass bg-white/90 rounded-3xl p-6 w-full max-w-sm text-center space-y-4 shadow-2xl border border-red-200">
       <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">⚠️</div>
       <h3 class="font-bold text-lg text-slate-900">Разорвать связь?</h3>
-      <p class="text-xs text-slate-600 leading-relaxed">Вы уверены? Связь будет разорвана для <b>обоих партнеров</b>.</p>
+      <p class="text-xs text-slate-600 leading-relaxed">Связь будет разорвана для обоих партнеров.</p>
       <div class="flex gap-2 pt-2">
         <button onclick="unlinkPair()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-full text-sm font-medium shadow-md transition">Да, разорвать</button>
         <button onclick="toggleModal('unlink-modal')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-full text-sm font-medium transition">Отмена</button>
@@ -308,7 +306,7 @@
     <div class="glass bg-white/90 rounded-3xl p-6 w-full max-w-sm text-center space-y-4 shadow-2xl">
       <div class="w-12 h-12 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">🚪</div>
       <h3 class="font-bold text-lg text-slate-900">Выйти из аккаунта?</h3>
-      <p class="text-xs text-slate-600 leading-relaxed">Вам нужно будет снова ввести логин и пароль для входа.</p>
+      <p class="text-xs text-slate-600 leading-relaxed">Понадобится повторный вход.</p>
       <div class="flex gap-2 pt-2">
         <button onclick="logout()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-full text-sm font-medium shadow-md transition">Выйти</button>
         <button onclick="toggleModal('logout-modal')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-full text-sm font-medium transition">Отмена</button>
@@ -330,11 +328,9 @@
     let loadedPhotosCache = [];
     let currentAlbumScale = 4;
 
-    // Уровни зума календаря
     const ZOOM_MODES = [1, 4, 9, 12];
     let currentZoomIndex = 0; 
 
-    // --- ИНИЦИАЛИЗАЦИЯ ---
     window.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await db.auth.getSession();
       if (session) {
@@ -346,7 +342,6 @@
       initCalendarTouchEvents();
     });
 
-    // --- МЕНЮ ТРЕХ ТОЧЕК ---
     function toggleMenu(event) {
       event.stopPropagation();
       document.getElementById('more-menu').classList.toggle('hidden');
@@ -358,7 +353,6 @@
 
     document.addEventListener('click', () => closeMenu());
 
-    // --- АНИМАЦИЯ ТАБЛЕТКИ НАВИГАЦИИ ---
     function updatePillPosition(activeTabId) {
       const activeBtn = document.getElementById(`tab-${activeTabId}`);
       const pill = document.getElementById('active-pill');
@@ -378,7 +372,6 @@
       }
     }
 
-    // --- АВТОРИЗАЦИЯ И ДАННЫЕ ---
     async function register() {
       const email = document.getElementById('auth-email').value;
       const password = document.getElementById('auth-password').value;
@@ -425,7 +418,7 @@
     function copyPairCode() {
       if (currentPair && currentPair.pair_code) {
         navigator.clipboard.writeText(currentPair.pair_code);
-        alert(`Код пары ${currentPair.pair_code} скопирован в буфер обмена!`);
+        alert(`Код пары ${currentPair.pair_code} скопирован!`);
       }
     }
 
@@ -436,14 +429,14 @@
       const { data: pair, error } = await db.from('pairs').insert([{ pair_code: code, first_date: firstDate }]).select().single();
       if (error) return alert(error.message);
       await db.from('profiles').update({ pair_id: pair.id }).eq('id', currentUser.id);
-      alert(`Ваш код пары: ${code}. Передайте его вашей второй половинке!`);
+      alert(`Код пары: ${code}`);
       await loadUserData();
     }
 
     async function joinPair() {
       const code = document.getElementById('pair-code-input').value.trim().toUpperCase();
       const { data: pair, error } = await db.from('pairs').select().eq('pair_code', code).single();
-      if (error || !pair) return alert("Пара с таким кодом не найдена");
+      if (error || !pair) return alert("Пара не найдена");
       await db.from('profiles').update({ pair_id: pair.id }).eq('id', currentUser.id);
       await loadUserData();
     }
@@ -453,12 +446,12 @@
         await db.from('profiles').update({ pair_id: null }).eq('pair_id', currentPair.id);
         await db.from('pairs').delete().eq('id', currentPair.id);
         toggleModal('unlink-modal');
-        alert("Связь успешно разорвана.");
+        alert("Связь разорвана.");
         currentPair = null;
         document.getElementById('nav').classList.add('hidden');
         showScreen('pair-setup');
       } catch (err) {
-        alert("Ошибка при разрыве связи: " + err.message);
+        alert("Ошибка: " + err.message);
       }
     }
 
@@ -552,14 +545,14 @@
       });
     }
 
-    // --- РЕНДЕР КАЛЕНДАРЯ И МАСШТАБИРОВАНИЯ ---
-    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Апрель", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+    // --- СЕТКА И ЗУМ КАЛЕНДАРЯ ---
+    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
 
     function renderCalendar() {
       const monthsCount = ZOOM_MODES[currentZoomIndex];
       const btn = document.getElementById('zoom-toggle-btn');
       
-      const labels = { 1: '🔍 1 Месяц', 4: '🔍 4 Месяца', 9: '🔍 9 Месяцев', 12: '🔍 12 Месяцев (Год)' };
+      const labels = { 1: '🔍 1 Месяц', 4: '🔍 4 Месяца', 9: '🔍 9 Месяцев', 12: '🔍 12 Месяцев' };
       btn.innerText = labels[monthsCount];
 
       if (monthsCount === 1) {
@@ -603,7 +596,7 @@
         else if (hasEvent) bgClass = "bg-red-100 text-red-600 font-semibold border border-red-300";
 
         grid.innerHTML += `
-          <div class="h-10 flex flex-col items-center justify-center rounded-xl text-xs ${bgClass} transition relative cursor-pointer" onclick="selectCalendarDay('${fullDateStr}')">
+          <div class="h-10 flex flex-col items-center justify-center rounded-xl text-xs ${bgClass} transition cursor-pointer" onclick="selectCalendarDay('${fullDateStr}')">
             <span>${day}</span>
             ${hasEvent && !isToday ? '<span class="w-1 h-1 bg-red-500 rounded-full mt-0.5"></span>' : ''}
           </div>`;
@@ -626,10 +619,11 @@
       const container = document.getElementById('multi-month-view');
       container.innerHTML = '';
 
-      container.className = "grid gap-3 ";
-      if (count === 4) container.className += "grid-cols-1 md:grid-cols-2";
-      else if (count === 9) container.className += "grid-cols-1 md:grid-cols-3";
-      else if (count === 12) container.className += "grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
+      let gridClass = "grid gap-3 ";
+      if (count === 4) gridClass += "grid-cols-1 sm:grid-cols-2";
+      else if (count === 9) gridClass += "grid-cols-1 sm:grid-cols-2 md:grid-cols-3";
+      else if (count === 12) gridClass += "grid-cols-2 sm:grid-cols-3 md:grid-cols-4";
+      container.className = gridClass;
 
       for (let m = 0; m < count; m++) {
         const d = new Date(startYear, startMonth + m, 1);
@@ -649,7 +643,7 @@
           const fullDateStr = `${y}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           const hasEvent = eventsForMonth.some(e => e.event_date === fullDateStr);
           daysGrid += `
-            <div class="text-center py-0.5 text-[9px] md:text-[10px] ${hasEvent ? 'bg-red-100 font-bold text-red-600 rounded-md' : 'text-slate-600'}">
+            <div class="text-center py-0.5 text-[9px] ${hasEvent ? 'bg-red-100 font-bold text-red-600 rounded' : 'text-slate-600'}">
               ${day}
             </div>`;
         }
@@ -676,22 +670,16 @@
       const area = document.getElementById('calendar-touch-area');
       let touchStartX = 0;
       let touchStartY = 0;
-      let initialPinchDistance = null;
 
       area.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) {
           touchStartX = e.touches[0].clientX;
           touchStartY = e.touches[0].clientY;
-        } else if (e.touches.length === 2) {
-          initialPinchDistance = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
         }
       }, { passive: true });
 
       area.addEventListener('touchend', (e) => {
-        if (e.changedTouches.length === 1 && initialPinchDistance === null) {
+        if (e.changedTouches.length === 1) {
           const deltaX = e.changedTouches[0].clientX - touchStartX;
           const deltaY = e.changedTouches[0].clientY - touchStartY;
 
@@ -700,43 +688,17 @@
             else changeMonth(-1);
           }
         }
-        initialPinchDistance = null;
-      }, { passive: true });
-
-      area.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2 && initialPinchDistance !== null) {
-          const currentDistance = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
-
-          const diff = currentDistance - initialPinchDistance;
-
-          if (diff < -50) {
-            if (currentZoomIndex < ZOOM_MODES.length - 1) {
-              cycleCalendarZoom(1);
-            }
-            initialPinchDistance = null;
-          } 
-          else if (diff > 50) {
-            if (currentZoomIndex > 0) {
-              cycleCalendarZoom(-1);
-            }
-            initialPinchDistance = null;
-          }
-        }
       }, { passive: true });
     }
 
     function renderCalendarEventsList(yearEvents, startMonth, count) {
       const list = document.getElementById('calendar-events-list');
-      
       const filtered = yearEvents.filter(e => {
         const m = parseInt(e.event_date.split('-')[1]) - 1;
         return m >= startMonth && m < startMonth + count;
       });
 
-      list.innerHTML = filtered.length ? '' : '<p class="text-xs text-slate-400">В выбранном периоде пока нет запланированных событий.</p>';
+      list.innerHTML = filtered.length ? '' : '<p class="text-xs text-slate-400">В выбранном периоде нет событий.</p>';
 
       filtered.forEach(ev => {
         list.innerHTML += `
@@ -772,14 +734,14 @@
       if (isYearly) {
         const month = document.getElementById('ev-month').value;
         const day = document.getElementById('ev-day').value;
-        if (!month || !day) return alert("Выберите день и месяц для ежегодного события");
+        if (!month || !day) return alert("Выберите день и месяц");
         date = `${month}-${day}`;
       } else {
         date = document.getElementById('ev-date').value;
-        if (!date) return alert("Выберите дату события");
+        if (!date) return alert("Выберите дату");
       }
 
-      if (!title) return alert("Введите название события");
+      if (!title) return alert("Введите название");
 
       await db.from('events').insert([{ pair_id: currentPair.id, title, event_date: date, description: desc, is_yearly: isYearly }]);
       toggleModal('event-modal');
@@ -788,7 +750,7 @@
       renderCalendar();
     }
 
-    // --- АЛЬБОМ, ФОТО И FLIP-СЕТКА ---
+    // --- ФОТОАЛЬБОМ, ЗАГРУЗКА И АНИМАЦИИ СЕТКИ ---
     function handleFileSelect(event) {
       const files = Array.from(event.target.files);
       files.forEach(file => {
@@ -834,7 +796,7 @@
     async function uploadPhotos() {
       const date = document.getElementById('ph-date').value;
       const caption = document.getElementById('ph-caption').value;
-      if (!selectedFiles.length || !date) return alert("Выберите хотя бы одно фото и укажите дату");
+      if (!selectedFiles.length || !date) return alert("Выберите фото и укажите дату");
 
       const progressEl = document.getElementById('upload-progress');
       progressEl.classList.remove('hidden');
@@ -869,10 +831,10 @@
     async function loadPhotos() {
       const { data: photos } = await db.from('photos').select('*').eq('pair_id', currentPair.id).order('photo_date', { ascending: false });
       loadedPhotosCache = photos || [];
-      renderPhotosGrid(currentAlbumScale);
+      renderPhotosGrid();
     }
 
-    function updateAlbumScale(count, btnElement) {
+    function setAlbumScale(scale, btnElement) {
       if (btnElement) {
         document.querySelectorAll('.album-scale-btn').forEach(b => {
           b.classList.remove('active', 'bg-red-600', 'text-white', 'shadow-sm');
@@ -880,76 +842,44 @@
         btnElement.classList.add('active', 'bg-red-600', 'text-white', 'shadow-sm');
       }
 
+      currentAlbumScale = scale;
       const grid = document.getElementById('photos-grid');
-      const items = Array.from(grid.children);
-      const firstPositions = items.map(item => item.getBoundingClientRect());
-
-      grid.className = `grid-container scale-${count}`;
-      currentAlbumScale = count;
-
-      renderPhotosGrid(count);
-
-      const newItems = Array.from(grid.children);
-      const duration = 500;
-
-      newItems.forEach((item, index) => {
-        const lastPos = item.getBoundingClientRect();
-        const firstPos = firstPositions[index];
-
-        if (firstPos && firstPos.width > 0) {
-          const deltaX = firstPos.left - lastPos.left;
-          const deltaY = firstPos.top - lastPos.top;
-          const deltaW = firstPos.width / lastPos.width;
-          const deltaH = firstPos.height / lastPos.height;
-
-          item.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
-          item.style.transition = 'none';
-
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              item.style.transition = `transform ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity ${duration}ms ease`;
-              item.style.transform = 'translate(0, 0) scale(1, 1)';
-            });
-          });
-        } else {
-          item.style.opacity = '0';
-          item.style.transform = 'scale(0.3) translateY(20px)';
-          item.style.transition = 'none';
-
-          const delay = index * 25;
-
-          setTimeout(() => {
-            requestAnimationFrame(() => {
-              item.style.transition = `transform ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity ${duration}ms ease`;
-              item.style.opacity = '1';
-              item.style.transform = 'scale(1) translateY(0)';
-            });
-          }, Math.max(0, delay));
-        }
-      });
+      grid.className = `album-grid-container scale-${scale}`;
+      renderPhotosGrid();
     }
 
-    function renderPhotosGrid(count) {
+    function renderPhotosGrid() {
       const grid = document.getElementById('photos-grid');
       grid.innerHTML = '';
 
       if (!loadedPhotosCache || loadedPhotosCache.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-sm">В альбоме пока нет фотографий. Нажмите "+ Фото", чтобы добавить первые воспоминания.</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-sm">В альбоме пока нет фотографий. Нажмите "+ Фото", чтобы добавить первые кадры.</div>`;
         return;
       }
 
-      const displayPhotos = loadedPhotosCache.slice(0, count === 1 ? loadedPhotosCache.length : count);
+      const displayPhotos = loadedPhotosCache.slice(0, currentAlbumScale === 1 ? loadedPhotosCache.length : currentAlbumScale);
 
-      displayPhotos.forEach(ph => {
+      displayPhotos.forEach((ph, idx) => {
         const div = document.createElement('div');
-        div.className = "album-card glass rounded-2xl overflow-hidden shadow-sm flex flex-col relative group";
+        div.className = "album-card glass rounded-2xl overflow-hidden shadow-sm flex flex-col relative group cursor-pointer";
+        div.style.opacity = '0';
+        div.style.transform = 'scale(0.9) translateY(10px)';
+
         div.innerHTML = `
           <img src="${ph.photo_url}" class="w-full h-full object-cover">
           <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 flex flex-col justify-end text-white">
             <span class="card-date text-[10px] text-red-300 font-medium">${ph.photo_date}</span>
             ${ph.caption ? `<p class="card-caption text-xs font-medium truncate">${ph.caption}</p>` : ''}
           </div>`;
+        
         grid.appendChild(div);
+
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            div.style.opacity = '1';
+            div.style.transform = 'scale(1) translateY(0)';
+          });
+        }, idx * 40);
       });
     }
 
