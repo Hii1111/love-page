@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Наше Пространство ❤️</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5f5f7 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased p-4 md:p-8">
+
+  <!-- Контейнер приложения -->
+  <div class="max-w-4xl mx-auto">
+    
+    <!-- Навигация (Таблетки) -->
+    <header id="nav" class="hidden flex justify-between items-center mb-8 glass p-3 rounded-full shadow-sm">
+      <div class="flex space-x-1 md:space-x-2">
+        <button onclick="switchTab('dashboard')" class="nav-btn bg-red-600 text-white px-4 md:px-5 py-2 rounded-full text-xs md:text-sm font-medium transition">Главная</button>
+        <button onclick="switchTab('calendar')" class="nav-btn hover:bg-white/50 px-4 md:px-5 py-2 rounded-full text-xs md:text-sm font-medium transition">Календарь</button>
+        <button onclick="switchTab('album')" class="nav-btn hover:bg-white/50 px-4 md:px-5 py-2 rounded-full text-xs md:text-sm font-medium transition">Альбом</button>
+      </div>
+      <div class="flex items-center space-x-1">
+        <button onclick="toggleModal('unlink-modal')" class="text-xs text-red-500 hover:text-red-700 px-2 py-2 font-medium">Разорвать пару</button>
+        <button onclick="logout()" class="text-xs text-slate-500 hover:text-slate-700 px-2 py-2">Выйти</button>
+      </div>
+    </header>
+
+    <!-- 1. Экран Авторизации -->
+    <section id="auth-screen" class="glass rounded-3xl p-8 max-w-md mx-auto my-12 shadow-xl">
+      <h2 class="text-2xl font-bold text-center mb-2 text-slate-900">Вход для влюбленных</h2>
+      <p class="text-center text-xs text-slate-500 mb-6">Введите почту и пароль</p>
+      
+      <div class="space-y-4">
+        <input id="auth-email" type="email" placeholder="Email" class="w-full px-4 py-3 rounded-2xl glass focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
+        <input id="auth-password" type="password" placeholder="Пароль" class="w-full px-4 py-3 rounded-2xl glass focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
+        
+        <div class="flex gap-3 pt-2">
+          <button onclick="login()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-full text-sm font-semibold shadow-md transition">Войти</button>
+          <button onclick="register()" class="flex-1 bg-white/70 hover:bg-white text-slate-700 py-3 rounded-full text-sm font-semibold border border-slate-200 transition">Регистрация</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Экран Настройки / Синхронизации пары -->
+    <section id="pair-setup" class="hidden glass rounded-3xl p-8 max-w-md mx-auto my-12 shadow-xl">
+      <h2 class="text-2xl font-bold text-center mb-4">Синхронизация пары</h2>
+      
+      <div class="space-y-6">
+        <div class="bg-white/40 p-4 rounded-2xl">
+          <h3 class="text-sm font-semibold mb-2">Вариант А: Создать пару</h3>
+          <p class="text-xs text-slate-500 mb-3">Выберите дату знакомства и создайте код для партнера.</p>
+          <input id="setup-date" type="date" class="w-full px-4 py-2 mb-3 rounded-xl glass text-sm">
+          <button onclick="createPair()" class="w-full bg-red-600 text-white py-2 rounded-full text-sm font-medium">Создать пара-код</button>
+        </div>
+
+        <div class="relative flex py-2 items-center">
+          <div class="flex-grow border-t border-slate-300"></div>
+          <span class="flex-shrink mx-4 text-xs text-slate-400">ИЛИ</span>
+          <div class="flex-grow border-t border-slate-300"></div>
+        </div>
+
+        <div class="bg-white/40 p-4 rounded-2xl">
+          <h3 class="text-sm font-semibold mb-2">Вариант Б: Подключиться</h3>
+          <input id="pair-code-input" type="text" placeholder="Введите код партнера" class="w-full px-4 py-2 mb-3 rounded-xl glass text-sm uppercase">
+          <button onclick="joinPair()" class="w-full bg-slate-800 text-white py-2 rounded-full text-sm font-medium">Присоединиться</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Главный Дашборд -->
+    <main id="dashboard" class="hidden space-y-6">
+      <div class="glass rounded-3xl p-8 text-center shadow-lg">
+        <span class="inline-block bg-red-100 text-red-600 text-xs px-3 py-1 rounded-full mb-3 font-semibold">Мы вместе</span>
+        <h1 id="days-counter" class="text-5xl font-extrabold text-slate-900 my-2">0</h1>
+        <p class="text-slate-500 text-sm">дней наполненных любовью ❤️</p>
+      </div>
+
+      <div class="glass rounded-3xl p-6 shadow-md">
+        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-red-600"></span> Ближайшие даты
+        </h3>
+        <div id="upcoming-events" class="space-y-3 text-sm text-slate-600">
+          <!-- Загружается JS -->
+        </div>
+      </div>
+    </main>
+
+    <!-- 4. Календарь -->
+    <main id="calendar" class="hidden space-y-6">
+      <div class="glass rounded-3xl p-6 shadow-md">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold">Памятные даты</h2>
+          <button onclick="toggleModal('event-modal')" class="bg-red-600 text-white text-xs px-4 py-2 rounded-full font-medium">+ Добавить событие</button>
+        </div>
+        <div id="calendar-events-list" class="space-y-3">
+          <!-- Загружается JS -->
+        </div>
+      </div>
+    </main>
+
+    <!-- 5. Альбом -->
+    <main id="album" class="hidden space-y-6">
+      <div class="glass rounded-3xl p-6 shadow-md">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold">Фотоальбом</h2>
+          <button onclick="toggleModal('photo-modal')" class="bg-red-600 text-white text-xs px-4 py-2 rounded-full font-medium">+ Добавить фото</button>
+        </div>
+        <div id="photos-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Загружается JS -->
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Модальное окно создания события -->
+  <div id="event-modal" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="glass bg-white/80 rounded-3xl p-6 w-full max-w-sm space-y-4">
+      <h3 class="font-bold text-lg">Новое событие</h3>
+      <input id="ev-title" type="text" placeholder="Название события" class="w-full p-3 rounded-xl glass text-sm">
+      <input id="ev-date" type="date" class="w-full p-3 rounded-xl glass text-sm">
+      <textarea id="ev-desc" placeholder="Описание (необязательно)" class="w-full p-3 rounded-xl glass text-sm h-20"></textarea>
+      <div class="flex gap-2">
+        <button onclick="saveEvent()" class="flex-1 bg-red-600 text-white py-2 rounded-full text-sm font-medium">Сохранить</button>
+        <button onclick="toggleModal('event-modal')" class="flex-1 bg-slate-200 py-2 rounded-full text-sm font-medium">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно добавления фото -->
+  <div id="photo-modal" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="glass bg-white/80 rounded-3xl p-6 w-full max-w-sm space-y-4">
+      <h3 class="font-bold text-lg">Добавить момент в альбом</h3>
+      <input id="ph-file" type="file" accept="image/*" class="w-full text-xs">
+      <input id="ph-date" type="date" class="w-full p-3 rounded-xl glass text-sm">
+      <input id="ph-caption" type="text" placeholder="Подпись к фото" class="w-full p-3 rounded-xl glass text-sm">
+      <div class="flex gap-2">
+        <button onclick="uploadPhoto()" class="flex-1 bg-red-600 text-white py-2 rounded-full text-sm font-medium">Загрузить</button>
+        <button onclick="toggleModal('photo-modal')" class="flex-1 bg-slate-200 py-2 rounded-full text-sm font-medium">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно предупреждения о разрыве пары -->
+  <div id="unlink-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="glass bg-white/90 rounded-3xl p-6 w-full max-w-sm text-center space-y-4 shadow-2xl border border-red-200">
+      <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">⚠️</div>
+      <h3 class="font-bold text-lg text-slate-900">Разорвать связь?</h3>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Вы уверены? Связь будет разорвана для <b>обоих партнеров</b>. Все совместные события, счетчик дней и фотоальбом будут безвозвратно удалены.
+      </p>
+      <div class="flex gap-2 pt-2">
+        <button onclick="unlinkPair()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-full text-sm font-medium shadow-md transition">Да, разорвать</button>
+        <button onclick="toggleModal('unlink-modal')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-full text-sm font-medium transition">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- КОНФИГУРАЦИЯ SUPABASE ---
+    const SUPABASE_URL = 'https://etzicetyyzasnndbrrdi.supabase.co/rest/v1/';
+    const SUPABASE_KEY = 'sb_publishable_D-GHN813c5wFRRSFMJ7N9g_g-90Wj48';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentUser = null;
+    let currentPair = null;
+
+    // --- ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ (КЭШ СЕССИИ) ---
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        currentUser = session.user;
+        await loadUserData();
+      } else {
+        showScreen('auth-screen');
+      }
+    });
+
+    // --- АВТОРИЗАЦИЯ ---
+    async function register() {
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) return alert(error.message);
+      
+      await supabase.from('profiles').insert([{ id: data.user.id, email: email }]);
+      currentUser = data.user;
+      await loadUserData();
+    }
+
+    async function login() {
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return alert(error.message);
+      currentUser = data.user;
+      await loadUserData();
+    }
+
+    async function logout() {
+      await supabase.auth.signOut();
+      location.reload();
+    }
+
+    // --- ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ ---
+    async function loadUserData() {
+      const { data: profile } = await supabase.from('profiles').select('*, pairs(*)').eq('id', currentUser.id).single();
+      
+      if (!profile.pair_id) {
+        showScreen('pair-setup');
+      } else {
+        currentPair = profile.pairs;
+        document.getElementById('nav').classList.remove('hidden');
+        switchTab('dashboard');
+        renderDashboard();
+      }
+    }
+
+    // --- НАСТРОЙКА ПАРЫ ---
+    async function createPair() {
+      const firstDate = document.getElementById('setup-date').value;
+      if(!firstDate) return alert("Укажите дату знакомства");
+
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const { data: pair, error } = await supabase.from('pairs').insert([{ pair_code: code, first_date: firstDate }]).select().single();
+      
+      if (error) return alert(error.message);
+
+      await supabase.from('profiles').update({ pair_id: pair.id }).eq('id', currentUser.id);
+      alert(`Ваш код пары: ${code}. Передайте его вашей второй половинке!`);
+      await loadUserData();
+    }
+
+    async function joinPair() {
+      const code = document.getElementById('pair-code-input').value.trim().toUpperCase();
+      const { data: pair, error } = await supabase.from('pairs').select().eq('pair_code', code).single();
+      
+      if (error || !pair) return alert("Пара с таким кодом не найдена");
+
+      await supabase.from('profiles').update({ pair_id: pair.id }).eq('id', currentUser.id);
+      await loadUserData();
+    }
+
+    // --- РАЗРЫВ ПАРЫ ---
+    async function unlinkPair() {
+      try {
+        // 1. Сбрасываем pair_id у всех участников пары
+        await supabase
+          .from('profiles')
+          .update({ pair_id: null })
+          .eq('pair_id', currentPair.id);
+
+        // 2. Удаляем пару (каскадно удалятся её события и фотографии)
+        await supabase
+          .from('pairs')
+          .delete()
+          .eq('id', currentPair.id);
+
+        toggleModal('unlink-modal');
+        alert("Связь успешно разорвана.");
+        
+        // 3. Сбрасываем состояние и переводим на экран настройки
+        currentPair = null;
+        document.getElementById('nav').classList.add('hidden');
+        showScreen('pair-setup');
+      } catch (err) {
+        alert("Ошибка при разрыве связи: " + err.message);
+      }
+    }
+
+    // --- ОТОБРАЖЕНИЕ ДАШБОРДА И СЧЕТЧИК ---
+    function renderDashboard() {
+      const start = new Date(currentPair.first_date);
+      const now = new Date();
+      const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+      document.getElementById('days-counter').innerText = diffDays;
+      loadUpcomingEvents();
+    }
+
+    // --- КАЛЕНДАРЬ И СОБЫТИЯ ---
+    async function loadUpcomingEvents() {
+      const { data: events } = await supabase.from('events').select('*').eq('pair_id', currentPair.id).order('event_date', { ascending: true });
+      
+      const list = document.getElementById('upcoming-events');
+      const calList = document.getElementById('calendar-events-list');
+      
+      list.innerHTML = events.length ? '' : '<p class="text-xs text-slate-400">Пока нет важных дат</p>';
+      calList.innerHTML = '';
+
+      events.forEach(ev => {
+        const item = `
+          <div class="flex justify-between items-center bg-white/40 p-3 rounded-2xl">
+            <div>
+              <div class="font-semibold text-slate-800">${ev.title}</div>
+              <div class="text-xs text-slate-500">${ev.description || ''}</div>
+            </div>
+            <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">${ev.event_date}</span>
+          </div>`;
+        list.innerHTML += item;
+        calList.innerHTML += item;
+      });
+    }
+
+    async function saveEvent() {
+      const title = document.getElementById('ev-title').value;
+      const date = document.getElementById('ev-date').value;
+      const desc = document.getElementById('ev-desc').value;
+
+      if(!title || !date) return alert("Заполните название и дату");
+
+      await supabase.from('events').insert([{ pair_id: currentPair.id, title, event_date: date, description: desc }]);
+      toggleModal('event-modal');
+      loadUpcomingEvents();
+    }
+
+    // --- ФОТОАЛЬБОМ ---
+    async function uploadPhoto() {
+      const fileInput = document.getElementById('ph-file');
+      const date = document.getElementById('ph-date').value;
+      const caption = document.getElementById('ph-caption').value;
+
+      if(!fileInput.files.length || !date) return alert("Выберите фото и дату");
+
+      const file = fileInput.files[0];
+      const filePath = `${currentPair.id}/${Date.now()}_${file.name}`;
+
+      // 1. Загрузка в Storage
+      const { error: uploadErr } = await supabase.storage.from('love-photos').upload(filePath, file);
+      if(uploadErr) return alert(uploadErr.message);
+
+      // 2. Получение публичного URL
+      const { data: { publicUrl } } = supabase.storage.from('love-photos').getPublicUrl(filePath);
+
+      // 3. Сохранение в БД
+      await supabase.from('photos').insert([{ pair_id: currentPair.id, photo_url: publicUrl, photo_date: date, caption }]);
+      
+      // 4. Дублируем как событие в календарь
+      await supabase.from('events').insert([{ pair_id: currentPair.id, title: `📸 ${caption || 'Новое фото'}`, event_date: date }]);
+
+      toggleModal('photo-modal');
+      loadPhotos();
+      loadUpcomingEvents();
+    }
+
+    async function loadPhotos() {
+      const { data: photos } = await supabase.from('photos').select('*').eq('pair_id', currentPair.id).order('photo_date', { ascending: false });
+      const grid = document.getElementById('photos-grid');
+      grid.innerHTML = '';
+
+      photos.forEach(ph => {
+        grid.innerHTML += `
+          <div class="glass rounded-2xl overflow-hidden shadow-sm">
+            <img src="${ph.photo_url}" class="w-full h-48 object-cover">
+            <div class="p-3">
+              <span class="text-xs text-red-600 font-medium">${ph.photo_date}</span>
+              <p class="text-sm text-slate-700 font-medium mt-1">${ph.caption || ''}</p>
+            </div>
+          </div>`;
+      });
+    }
+
+    // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+    function showScreen(id) {
+      ['auth-screen', 'pair-setup', 'dashboard', 'calendar', 'album'].forEach(s => {
+        document.getElementById(s)?.classList.add('hidden');
+      });
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function switchTab(tabId) {
+      ['dashboard', 'calendar', 'album'].forEach(t => document.getElementById(t).classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+      if (tabId === 'album') loadPhotos();
+    }
+
+    function toggleModal(id) {
+      document.getElementById(id).classList.toggle('hidden');
+    }
+  </script>
+</body>
+</html>
