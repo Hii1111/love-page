@@ -6,7 +6,7 @@
   <title>Наше Пространство ❤️</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase JS Client (исправленная CDN ссылка) -->
+  <!-- Supabase JS Client (стабильное подключение через unpkg) -->
   <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     body {
@@ -220,8 +220,27 @@
 
     // --- ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ ---
     async function loadUserData() {
-      const { data: profile } = await db.from('profiles').select('*, pairs(*)').eq('id', currentUser.id).single();
+      let { data: profile } = await db
+        .from('profiles')
+        .select('*, pairs(*)')
+        .eq('id', currentUser.id)
+        .maybeSingle();
       
+      // Автоматическое создание профиля, если его не оказалось в БД
+      if (!profile) {
+        const { data: newProfile, error: createErr } = await db
+          .from('profiles')
+          .insert([{ id: currentUser.id, email: currentUser.email }])
+          .select('*, pairs(*)')
+          .single();
+        
+        if (createErr) {
+          console.error("Ошибка создания профиля:", createErr);
+          return showScreen('pair-setup');
+        }
+        profile = newProfile;
+      }
+
       if (!profile || !profile.pair_id) {
         showScreen('pair-setup');
       } else {
