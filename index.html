@@ -73,7 +73,7 @@
   <div class="max-w-4xl mx-auto">
     
     <!-- Навигация -->
-    <header id="nav" class="hidden flex justify-between items-center gap-4 mb-8 glass p-2 rounded-3xl md:rounded-full shadow-sm relative">
+    <header id="nav" class="hidden flex justify-between items-center gap-4 mb-8 glass p-2 rounded-3xl md:rounded-full shadow-sm relative z-30">
       <div id="nav-container" class="relative flex space-x-1 p-1">
         <div id="active-pill" class="nav-pill"></div>
         <button id="tab-dashboard" onclick="switchTab('dashboard')" class="relative z-10 text-white px-4 md:px-5 py-2 rounded-full text-xs md:text-sm font-medium transition">Главная</button>
@@ -82,13 +82,13 @@
       </div>
 
       <!-- Меню из трех точек -->
-      <div class="relative z-20 pr-2">
-        <button onclick="toggleMenu(event)" class="w-9 h-9 flex items-center justify-center rounded-full bg-white/70 hover:bg-white text-slate-700 font-bold text-lg border border-slate-200/80 transition shadow-sm">
+      <div class="relative z-50 pr-2">
+        <button onclick="toggleMenu(event)" class="w-9 h-9 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-slate-700 font-bold text-lg border border-slate-200/80 transition shadow-sm">
           ⋮
         </button>
 
-        <!-- Выпадающее меню без прозрачности (непрозрачное белое bg-white) -->
-        <div id="more-menu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-2xl p-2 border-2 border-slate-200 z-[9999] text-xs space-y-1">
+        <!-- Выпадающее меню поднят на самый верх z-[100000] без прозрачности -->
+        <div id="more-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl p-2 border-2 border-slate-200/90 z-[100000] text-xs space-y-1">
           <div onclick="copyPairCode(); closeMenu();" class="cursor-pointer hover:bg-slate-100 p-2.5 rounded-xl flex items-center justify-between text-slate-700 font-medium transition">
             <span>Код пары:</span>
             <span id="header-pair-code" class="text-red-600 font-bold">------</span>
@@ -151,7 +151,7 @@
 
     <!-- 3. Главный Дашборд -->
     <main id="dashboard" class="hidden space-y-6">
-      <div class="glass rounded-3xl p-6 shadow-lg text-center relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+      <div class="glass rounded-3xl p-6 shadow-lg text-center relative overflow-hidden flex flex-col justify-between min-h-[310px]">
         <!-- Верхняя часть: Партнеры -->
         <div>
           <div class="flex items-center justify-center gap-4 sm:gap-8 mb-4">
@@ -177,10 +177,10 @@
           <span class="inline-block bg-red-100 text-red-600 text-xs px-3.5 py-1.5 rounded-full font-semibold">Мы вместе</span>
         </div>
 
-        <!-- Нижняя часть: Кол-во дней перемещено вниз -->
-        <div class="mt-6 pt-4 border-t border-slate-200/50">
-          <h1 id="days-counter" class="text-2xl sm:text-3xl font-extrabold text-slate-900 my-1">0 дней</h1>
-          <p class="text-slate-500 text-xs sm:text-sm">наполненных любовью и счастьем</p>
+        <!-- Нижняя часть: Кликабельный отсчет времени -->
+        <div onclick="openLiveCounterModal()" class="mt-4 pt-4 border-t border-slate-200/50 cursor-pointer hover:bg-white/30 rounded-2xl p-2 transition group">
+          <div id="days-counter-wrapper"></div>
+          <p class="text-slate-500 text-xs sm:text-sm mt-1 group-hover:text-red-600 transition">наполненных любовью (нажмите для подробностей ⏱️)</p>
         </div>
       </div>
 
@@ -197,7 +197,6 @@
       <div id="calendar-touch-area" class="glass rounded-3xl p-6 shadow-md">
         <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
           <div class="flex items-center space-x-4">
-            <!-- Название месяцев без лишних слов -->
             <h2 id="calendar-month-year" class="text-xl font-bold">Месяц Год</h2>
             <div id="cal-nav-buttons" class="flex space-x-1">
               <button onclick="changeMonth(-1)" class="px-3 py-1 rounded-full bg-white/60 hover:bg-white text-xs font-semibold shadow-sm transition">←</button>
@@ -205,7 +204,6 @@
             </div>
           </div>
           
-          <!-- Кнопки зума без надписей "1 месяц", "4 месяца" -->
           <div class="flex items-center gap-2">
             <div class="flex items-center bg-white/70 rounded-full border border-slate-200/80 p-1 shadow-sm gap-1">
               <button onclick="cycleCalendarZoom(-1)" title="Увеличить" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-700 font-bold text-sm transition">＋</button>
@@ -239,7 +237,6 @@
           <h2 class="text-xl font-bold">Фотоальбом</h2>
           
           <div class="flex items-center gap-2">
-            <!-- Разделенные кнопки + и - без текста "3 в ряд" -->
             <button onclick="changeAlbumCols(-1)" title="Увеличить фото" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-slate-700 font-bold text-sm shadow-sm border border-slate-200 transition">＋</button>
             <button onclick="changeAlbumCols(1)" title="Уменьшить фото" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-slate-700 font-bold text-sm shadow-sm border border-slate-200 transition">－</button>
 
@@ -247,14 +244,29 @@
           </div>
         </div>
 
-        <!-- Контейнер для фото, разделенный по дням -->
         <div id="photos-grouped-container" class="space-y-6"></div>
       </div>
     </main>
 
   </div>
 
-  <!-- Модальное окно просмотра дня (при нажатии на дату в календаре) -->
+  <!-- Модальное окно точного таймера (Дни, Часы, Минуты, Секунды) -->
+  <div id="live-counter-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="glass bg-white/95 rounded-3xl p-6 w-full max-w-sm text-center space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-200/60 pb-3">
+        <h3 class="font-bold text-lg text-slate-800">Мы вместе ⏳</h3>
+        <button onclick="closeLiveCounterModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+      </div>
+
+      <p class="text-xs text-slate-500">Точное время совместной истории в реальном времени:</p>
+
+      <div id="live-counter-display" class="py-2"></div>
+
+      <button onclick="closeLiveCounterModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-full text-xs font-semibold shadow transition">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно просмотра дня -->
   <div id="day-view-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="glass bg-white/95 rounded-3xl p-6 w-full max-w-md space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar shadow-2xl">
       <div class="flex justify-between items-center border-b border-slate-200/60 pb-3">
@@ -262,13 +274,9 @@
         <button onclick="toggleModal('day-view-modal')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
       </div>
 
-      <!-- Секция для событий -->
       <div id="day-modal-event-section"></div>
-
-      <!-- Секция для фото дня -->
       <div id="day-modal-photos-section"></div>
 
-      <!-- Кнопки действий -->
       <div class="flex gap-2 pt-2 border-t border-slate-200/60">
         <button id="day-modal-add-event-btn" onclick="" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-full text-xs font-semibold shadow transition">+ Событие</button>
         <button onclick="toggleModal('day-view-modal'); toggleModal('photo-modal');" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-full text-xs font-semibold border border-slate-200 transition">+ Фото</button>
@@ -399,6 +407,7 @@
     const ZOOM_MODES = [1, 4, 9, 12];
     let currentZoomIndex = 0; 
     let editingEventId = null;
+    let liveTimerInterval = null;
 
     const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
     const monthsGenitive = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
@@ -540,7 +549,8 @@
       }
     }
 
-    function formatTimeTogether(startDateStr) {
+    // --- РАСЧЕТ И ОТОБРАЖЕНИЕ ОТСЧЕТА ДНЕЙ НА ГЛАВНОМ ЭКРАНЕ ---
+    function renderMainCounterHTML(startDateStr) {
       const start = new Date(startDateStr);
       const now = new Date();
 
@@ -558,16 +568,30 @@
         months += 12;
       }
 
-      const parts = [];
-      if (years > 0) parts.push(`${years} ${getYearDeclension(years)}`);
-      if (months > 0) parts.push(`${months} ${getMonthDeclension(months)}`);
-      if (days > 0 || parts.length === 0) parts.push(`${days} ${getDayDeclension(days)}`);
+      if (years > 0) {
+        let line1 = `${years} ${getYearDeclension(years)}`;
+        if (months > 0) line1 += ` ${months} ${getMonthDeclension(months)}`;
+        let line2 = days > 0 ? `${days} ${getDayDeclension(days)}` : '';
 
-      return parts.join(' ');
+        return `
+          <div class="text-2xl sm:text-3xl font-extrabold text-slate-900">${line1}</div>
+          ${line2 ? `<div class="text-xl sm:text-2xl font-bold text-slate-800 mt-1">${line2}</div>` : ''}
+        `;
+      } else {
+        // Если 0 лет: одна строчка для месяцев и дней
+        let singleLine = '';
+        if (months > 0) {
+          singleLine += `${months} ${getMonthDeclension(months)}`;
+          if (days > 0) singleLine += ` ${days} ${getDayDeclension(days)}`;
+        } else {
+          singleLine = `${days} ${getDayDeclension(days)}`;
+        }
+        return `<div class="text-2xl sm:text-3xl font-extrabold text-slate-900">${singleLine}</div>`;
+      }
     }
 
     async function renderDashboard() {
-      document.getElementById('days-counter').innerText = formatTimeTogether(currentPair.first_date);
+      document.getElementById('days-counter-wrapper').innerHTML = renderMainCounterHTML(currentPair.first_date);
 
       const p1Name = currentPair.partner1_name || 'Партнер 1';
       const p2Name = currentPair.partner2_name || 'Партнер 2';
@@ -590,6 +614,63 @@
       }
 
       renderUpcomingDashboardEvents();
+    }
+
+    // --- ЖИВОЙ ТАЙМЕР ПОДРОБНОСТИ (ДНИ, ЧАСЫ, МИНУТЫ, СЕКУНДЫ) ---
+    function openLiveCounterModal() {
+      if (!currentPair || !currentPair.first_date) return;
+      updateLiveCounterDisplay();
+      if (liveTimerInterval) clearInterval(liveTimerInterval);
+      liveTimerInterval = setInterval(updateLiveCounterDisplay, 1000);
+      toggleModal('live-counter-modal');
+    }
+
+    function closeLiveCounterModal() {
+      if (liveTimerInterval) {
+        clearInterval(liveTimerInterval);
+        liveTimerInterval = null;
+      }
+      toggleModal('live-counter-modal');
+    }
+
+    function updateLiveCounterDisplay() {
+      const start = new Date(currentPair.first_date + 'T00:00:00');
+      const now = new Date();
+      let diffMs = now - start;
+      if (diffMs < 0) diffMs = 0;
+
+      const totalSeconds = Math.floor(diffMs / 1000);
+      const totalMinutes = Math.floor(totalSeconds / 60);
+      const totalHours = Math.floor(totalMinutes / 60);
+      const totalDays = Math.floor(totalHours / 24);
+
+      const seconds = totalSeconds % 60;
+      const minutes = totalMinutes % 60;
+      const hours = totalHours % 24;
+
+      const display = document.getElementById('live-counter-display');
+      if (display) {
+        display.innerHTML = `
+          <div class="grid grid-cols-2 gap-3 text-center">
+            <div class="bg-red-50 p-3 rounded-2xl border border-red-100 shadow-sm">
+              <div class="text-2xl sm:text-3xl font-extrabold text-red-600">${totalDays}</div>
+              <div class="text-xs font-semibold text-slate-500 mt-1">${getDayDeclension(totalDays)}</div>
+            </div>
+            <div class="bg-red-50 p-3 rounded-2xl border border-red-100 shadow-sm">
+              <div class="text-2xl sm:text-3xl font-extrabold text-red-600">${hours}</div>
+              <div class="text-xs font-semibold text-slate-500 mt-1">${getHourDeclension(hours)}</div>
+            </div>
+            <div class="bg-red-50 p-3 rounded-2xl border border-red-100 shadow-sm">
+              <div class="text-2xl sm:text-3xl font-extrabold text-red-600">${minutes}</div>
+              <div class="text-xs font-semibold text-slate-500 mt-1">${getMinuteDeclension(minutes)}</div>
+            </div>
+            <div class="bg-red-50 p-3 rounded-2xl border border-red-100 shadow-sm">
+              <div class="text-2xl sm:text-3xl font-extrabold text-red-600">${seconds}</div>
+              <div class="text-xs font-semibold text-slate-500 mt-1">${getSecondDeclension(seconds)}</div>
+            </div>
+          </div>
+        `;
+      }
     }
 
     async function saveProfileSettings() {
@@ -691,7 +772,6 @@
       return events;
     }
 
-    // Показывать даты только ближайшего 1 месяца (30 дней) + фиксированное место под дату
     function renderUpcomingDashboardEvents() {
       const today = new Date();
       const todayStr = today.toISOString().split('T')[0];
@@ -783,7 +863,6 @@
       const endMonth = endTotalMonths % 12;
       const endYear = startYear + Math.floor(endTotalMonths / 12);
 
-      // Масштабирование названия месяцев без лишних слов ("Январь — Апрель 2026")
       if (startYear === endYear) {
         document.getElementById('calendar-month-year').innerText = `${monthNames[startMonth]} — ${monthNames[endMonth]} ${startYear}`;
       } else {
@@ -921,7 +1000,6 @@
       renderCalendar();
     }
 
-    // Нажатие на дату в календаре: Открывает фотки/события дня или окно добавления
     async function selectCalendarDay(dateStr) {
       const photosOnDate = loadedPhotosCache.filter(p => p.photo_date === dateStr);
       const year = parseInt(dateStr.split('-')[0], 10);
@@ -1069,7 +1147,7 @@
       renderCalendar();
     }
 
-    // --- ФОТОАЛЬБОМ, РАЗДЕЛЕНИЕ ПО ДНЯМ И ЗУМ ---
+    // --- ФОТОАЛЬБОМ ---
     function handleFileSelect(event) {
       const files = Array.from(event.target.files);
       files.forEach(file => {
@@ -1188,7 +1266,6 @@
       }, { passive: true });
     }
 
-    // Фотоальбом: Разделение по дням
     function renderPhotosGrid() {
       const container = document.getElementById('photos-grouped-container');
       container.innerHTML = '';
@@ -1198,7 +1275,6 @@
         return;
       }
 
-      // Группировка фото по датам
       const grouped = {};
       loadedPhotosCache.forEach(ph => {
         if (!grouped[ph.photo_date]) grouped[ph.photo_date] = [];
@@ -1248,7 +1324,7 @@
       });
     }
 
-    // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+    // --- СТИЛИ И СКЛОНЕНИЯ ---
     function showScreen(id) {
       ['auth-screen', 'pair-setup', 'dashboard', 'calendar', 'album'].forEach(s => document.getElementById(s)?.classList.add('hidden'));
       document.getElementById(id).classList.remove('hidden');
@@ -1282,6 +1358,24 @@
     function getDayDeclension(number) {
       const cases = [2, 0, 1, 1, 1, 2];
       const titles = ['день', 'дня', 'дней'];
+      return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+    }
+
+    function getHourDeclension(number) {
+      const cases = [2, 0, 1, 1, 1, 2];
+      const titles = ['час', 'часа', 'часов'];
+      return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+    }
+
+    function getMinuteDeclension(number) {
+      const cases = [2, 0, 1, 1, 1, 2];
+      const titles = ['минута', 'минуты', 'минут'];
+      return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+    }
+
+    function getSecondDeclension(number) {
+      const cases = [2, 0, 1, 1, 1, 2];
+      const titles = ['секунда', 'секунды', 'секунд'];
       return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
     }
   </script>
