@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Наше Пространство ❤️</title>
+  <title>LOVE PAGE ❤️</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Supabase JS Client -->
@@ -250,7 +250,7 @@
 
   </div>
 
-  <!-- Модальное окно точного таймера (Дни, Часы, Минуты, Секунды) -->
+  <!-- Модальное окно точного таймера -->
   <div id="live-counter-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="glass bg-white/95 rounded-3xl p-6 w-full max-w-sm text-center space-y-4 shadow-2xl">
       <div class="flex justify-between items-center border-b border-slate-200/60 pb-3">
@@ -308,7 +308,7 @@
       </div>
 
       <div class="flex gap-2 pt-2">
-        <button onclick="saveProfileSettings()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-full text-sm font-semibold shadow-md transition">Сохранить</button>
+        <button id="save-profile-btn" onclick="saveProfileSettings()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-full text-sm font-semibold shadow-md transition">Сохранить</button>
         <button onclick="toggleModal('profile-modal')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-full text-sm font-medium transition">Отмена</button>
       </div>
     </div>
@@ -578,7 +578,6 @@
           ${line2 ? `<div class="text-xl sm:text-2xl font-bold text-slate-800 mt-1">${line2}</div>` : ''}
         `;
       } else {
-        // Если 0 лет: одна строчка для месяцев и дней
         let singleLine = '';
         if (months > 0) {
           singleLine += `${months} ${getMonthDeclension(months)}`;
@@ -673,6 +672,7 @@
       }
     }
 
+    // --- ОБНОВЛЕННАЯ ФУНКЦИЯ СОХРАНЕНИЯ ПРОФИЛЯ С ПОЛНОЙ ПРОВЕРКОЙ ОШИБОК ---
     async function saveProfileSettings() {
       const p1Name = document.getElementById('p1-name-input').value;
       const p2Name = document.getElementById('p2-name-input').value;
@@ -680,30 +680,52 @@
       const p1File = document.getElementById('p1-photo-input').files[0];
       const p2File = document.getElementById('p2-photo-input').files[0];
 
-      let p1PhotoUrl = currentPair.partner1_photo;
-      let p2PhotoUrl = currentPair.partner2_photo;
+      let p1PhotoUrl = currentPair ? currentPair.partner1_photo : null;
+      let p2PhotoUrl = currentPair ? currentPair.partner2_photo : null;
 
-      if (p1File) {
-        const path = `${currentPair.id}/p1_${Date.now()}.${p1File.name.split('.').pop()}`;
-        await db.storage.from('love-photos').upload(path, p1File, { upsert: true });
-        p1PhotoUrl = db.storage.from('love-photos').getPublicUrl(path).data.publicUrl;
+      const btn = document.getElementById('save-profile-btn');
+      if (btn) {
+        btn.innerText = 'Сохранение...';
+        btn.disabled = true;
       }
 
-      if (p2File) {
-        const path = `${currentPair.id}/p2_${Date.now()}.${p2File.name.split('.').pop()}`;
-        await db.storage.from('love-photos').upload(path, p2File, { upsert: true });
-        p2PhotoUrl = db.storage.from('love-photos').getPublicUrl(path).data.publicUrl;
+      try {
+        if (p1File) {
+          const path = `${currentPair.id}/p1_${Date.now()}.${p1File.name.split('.').pop()}`;
+          const { error: uploadErr } = await db.storage.from('love-photos').upload(path, p1File, { upsert: true });
+          if (uploadErr) throw new Error(" Ошибка загрузки фото 1: " + uploadErr.message);
+          const { data: urlData } = db.storage.from('love-photos').getPublicUrl(path);
+          p1PhotoUrl = urlData.publicUrl;
+        }
+
+        if (p2File) {
+          const path = `${currentPair.id}/p2_${Date.now()}.${p2File.name.split('.').pop()}`;
+          const { error: uploadErr } = await db.storage.from('love-photos').upload(path, p2File, { upsert: true });
+          if (uploadErr) throw new Error(" Ошибка загрузки фото 2: " + uploadErr.message);
+          const { data: urlData } = db.storage.from('love-photos').getPublicUrl(path);
+          p2PhotoUrl = urlData.publicUrl;
+        }
+
+        const { error: updateErr } = await db.from('pairs').update({
+          partner1_name: p1Name,
+          partner2_name: p2Name,
+          partner1_photo: p1PhotoUrl,
+          partner2_photo: p2PhotoUrl
+        }).eq('id', currentPair.id);
+
+        if (updateErr) throw new Error("Ошибка обновления данных пары: " + updateErr.message);
+
+        toggleModal('profile-modal');
+        await loadUserData();
+        alert("Настройки профиля сохранены!");
+      } catch (err) {
+        alert("Не удалось сохранить профиль:\n" + err.message + "\n\nПроверьте, созданы ли колонки в Supabase SQL Editor и создан ли публичный бакет 'love-photos'.");
+      } finally {
+        if (btn) {
+          btn.innerText = 'Сохранить';
+          btn.disabled = false;
+        }
       }
-
-      await db.from('pairs').update({
-        partner1_name: p1Name,
-        partner2_name: p2Name,
-        partner1_photo: p1PhotoUrl,
-        partner2_photo: p2PhotoUrl
-      }).eq('id', currentPair.id);
-
-      toggleModal('profile-modal');
-      await loadUserData();
     }
 
     function toggleYearlyOption() {
@@ -739,7 +761,7 @@
     function getCalculatedEventsForYear(year) {
       const events = [];
       const autoHolidays = [
-        { title: "🎄 Новый Год ", date: `${year}-01-01` },
+        { title: "🎄 Новый Год (31 Декабря — 1 Января)", date: `${year}-01-01` },
         { title: "❤️ День Святого Валентина", date: `${year}-02-14` },
         { title: "🛡️ 23 Февраля", date: `${year}-02-23` },
         { title: "💐 8 Марта", date: `${year}-03-08` },
