@@ -22,6 +22,7 @@
     }
     .glass {
       background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.6);
     }
@@ -46,7 +47,6 @@
       user-select: none;
     }
 
-    /* Адаптивная сетка альбома */
     .album-grid {
       display: grid;
       width: 100%;
@@ -87,8 +87,8 @@
           ⋮
         </button>
 
-        <!-- Выпадающее меню поверх всех элементов с четким контуром -->
-        <div id="more-menu" class="hidden absolute right-0 mt-2 w-52 bg-white/95 rounded-2xl shadow-2xl p-2 border-2 border-slate-300/90 z-[9999] text-xs space-y-1">
+        <!-- Выпадающее меню без прозрачности (непрозрачное белое bg-white) -->
+        <div id="more-menu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-2xl p-2 border-2 border-slate-200 z-[9999] text-xs space-y-1">
           <div onclick="copyPairCode(); closeMenu();" class="cursor-pointer hover:bg-slate-100 p-2.5 rounded-xl flex items-center justify-between text-slate-700 font-medium transition">
             <span>Код пары:</span>
             <span id="header-pair-code" class="text-red-600 font-bold">------</span>
@@ -151,35 +151,42 @@
 
     <!-- 3. Главный Дашборд -->
     <main id="dashboard" class="hidden space-y-6">
-      <div class="glass rounded-3xl p-6 shadow-lg text-center relative overflow-hidden">
-        <div class="flex items-center justify-center gap-4 sm:gap-8 mb-6">
-          <div class="flex flex-col items-center">
-            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-red-500/50 shadow-md bg-white/80 mb-2 flex items-center justify-center">
-              <img id="p1-avatar" src="" class="w-full h-full object-cover hidden">
-              <span id="p1-avatar-placeholder" class="text-2xl sm:text-3xl">👤</span>
+      <div class="glass rounded-3xl p-6 shadow-lg text-center relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+        <!-- Верхняя часть: Партнеры -->
+        <div>
+          <div class="flex items-center justify-center gap-4 sm:gap-8 mb-4">
+            <div class="flex flex-col items-center">
+              <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-red-500/50 shadow-md bg-white/80 mb-2 flex items-center justify-center">
+                <img id="p1-avatar" src="" class="w-full h-full object-cover hidden">
+                <span id="p1-avatar-placeholder" class="text-2xl sm:text-3xl">👤</span>
+              </div>
+              <span id="p1-name-display" class="font-bold text-sm sm:text-base text-slate-800">Он</span>
             </div>
-            <span id="p1-name-display" class="font-bold text-sm sm:text-base text-slate-800">Он</span>
+
+            <div class="text-2xl sm:text-3xl animate-pulse text-red-500">❤️</div>
+
+            <div class="flex flex-col items-center">
+              <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-red-500/50 shadow-md bg-white/80 mb-2 flex items-center justify-center">
+                <img id="p2-avatar" src="" class="w-full h-full object-cover hidden">
+                <span id="p2-avatar-placeholder" class="text-2xl sm:text-3xl">👤</span>
+              </div>
+              <span id="p2-name-display" class="font-bold text-sm sm:text-base text-slate-800">Она</span>
+            </div>
           </div>
 
-          <div class="text-2xl sm:text-3xl animate-pulse text-red-500">❤️</div>
-
-          <div class="flex flex-col items-center">
-            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-red-500/50 shadow-md bg-white/80 mb-2 flex items-center justify-center">
-              <img id="p2-avatar" src="" class="w-full h-full object-cover hidden">
-              <span id="p2-avatar-placeholder" class="text-2xl sm:text-3xl">👤</span>
-            </div>
-            <span id="p2-name-display" class="font-bold text-sm sm:text-base text-slate-800">Она</span>
-          </div>
+          <span class="inline-block bg-red-100 text-red-600 text-xs px-3.5 py-1.5 rounded-full font-semibold">Мы вместе</span>
         </div>
 
-        <span class="inline-block bg-red-100 text-red-600 text-xs px-3.5 py-1.5 rounded-full mb-2 font-semibold">Мы вместе</span>
-        <h1 id="days-counter" class="text-3xl sm:text-4xl font-extrabold text-slate-900 my-2">0 дней</h1>
-        <p class="text-slate-500 text-xs sm:text-sm">наполненных любовью и счастьем</p>
+        <!-- Нижняя часть: Кол-во дней перемещено вниз -->
+        <div class="mt-6 pt-4 border-t border-slate-200/50">
+          <h1 id="days-counter" class="text-2xl sm:text-3xl font-extrabold text-slate-900 my-1">0 дней</h1>
+          <p class="text-slate-500 text-xs sm:text-sm">наполненных любовью и счастьем</p>
+        </div>
       </div>
 
       <div class="glass rounded-3xl p-6 shadow-md">
         <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-red-600"></span> Ближайшие даты
+          <span class="w-2 h-2 rounded-full bg-red-600"></span> Ближайшие даты (на месяц)
         </h3>
         <div id="upcoming-events" class="space-y-3 text-sm text-slate-600"></div>
       </div>
@@ -190,17 +197,22 @@
       <div id="calendar-touch-area" class="glass rounded-3xl p-6 shadow-md">
         <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
           <div class="flex items-center space-x-4">
+            <!-- Название месяцев без лишних слов -->
             <h2 id="calendar-month-year" class="text-xl font-bold">Месяц Год</h2>
             <div id="cal-nav-buttons" class="flex space-x-1">
               <button onclick="changeMonth(-1)" class="px-3 py-1 rounded-full bg-white/60 hover:bg-white text-xs font-semibold shadow-sm transition">←</button>
               <button onclick="changeMonth(1)" class="px-3 py-1 rounded-full bg-white/60 hover:bg-white text-xs font-semibold shadow-sm transition">→</button>
             </div>
           </div>
+          
+          <!-- Кнопки зума без надписей "1 месяц", "4 месяца" -->
           <div class="flex items-center gap-2">
-            <button id="zoom-toggle-btn" onclick="cycleCalendarZoom(1)" class="bg-white/70 hover:bg-white text-xs px-3.5 py-2 rounded-full font-semibold shadow-sm border border-slate-200/60 transition">
-              1 Месяц
-            </button>
-            <button onclick="toggleModal('event-modal')" class="bg-red-600 hover:bg-red-700 text-white text-xs px-4 py-2 rounded-full font-medium shadow transition">+ Событие</button>
+            <div class="flex items-center bg-white/70 rounded-full border border-slate-200/80 p-1 shadow-sm gap-1">
+              <button onclick="cycleCalendarZoom(-1)" title="Увеличить" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-700 font-bold text-sm transition">＋</button>
+              <button onclick="cycleCalendarZoom(1)" title="Уменьшить" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-700 font-bold text-sm transition">－</button>
+            </div>
+
+            <button onclick="openAddEventModal()" class="bg-red-600 hover:bg-red-700 text-white text-xs px-4 py-2 rounded-full font-medium shadow transition">+ Событие</button>
           </div>
         </div>
 
@@ -227,20 +239,41 @@
           <h2 class="text-xl font-bold">Фотоальбом</h2>
           
           <div class="flex items-center gap-2">
-            <div class="flex items-center bg-white/70 rounded-full border border-slate-200/80 p-1 shadow-sm">
-              <button onclick="changeAlbumCols(-1)" title="Увеличить фото" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-700 font-bold text-sm transition">＋</button>
-              <span id="album-cols-indicator" class="text-xs font-semibold px-2 text-slate-500">3 в ряд</span>
-              <button onclick="changeAlbumCols(1)" title="Уменьшить фото" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-700 font-bold text-sm transition">－</button>
-            </div>
+            <!-- Разделенные кнопки + и - без текста "3 в ряд" -->
+            <button onclick="changeAlbumCols(-1)" title="Увеличить фото" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-slate-700 font-bold text-sm shadow-sm border border-slate-200 transition">＋</button>
+            <button onclick="changeAlbumCols(1)" title="Уменьшить фото" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-slate-700 font-bold text-sm shadow-sm border border-slate-200 transition">－</button>
 
             <button onclick="toggleModal('photo-modal')" class="bg-red-600 text-white text-xs px-4 py-2 rounded-full font-medium shadow hover:bg-red-700 transition">+ Фото</button>
           </div>
         </div>
 
-        <div id="photos-grid" class="album-grid"></div>
+        <!-- Контейнер для фото, разделенный по дням -->
+        <div id="photos-grouped-container" class="space-y-6"></div>
       </div>
     </main>
 
+  </div>
+
+  <!-- Модальное окно просмотра дня (при нажатии на дату в календаре) -->
+  <div id="day-view-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="glass bg-white/95 rounded-3xl p-6 w-full max-w-md space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-200/60 pb-3">
+        <h3 id="day-modal-title" class="font-bold text-lg text-slate-800">Дата</h3>
+        <button onclick="toggleModal('day-view-modal')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+      </div>
+
+      <!-- Секция для событий -->
+      <div id="day-modal-event-section"></div>
+
+      <!-- Секция для фото дня -->
+      <div id="day-modal-photos-section"></div>
+
+      <!-- Кнопки действий -->
+      <div class="flex gap-2 pt-2 border-t border-slate-200/60">
+        <button id="day-modal-add-event-btn" onclick="" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-full text-xs font-semibold shadow transition">+ Событие</button>
+        <button onclick="toggleModal('day-view-modal'); toggleModal('photo-modal');" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-full text-xs font-semibold border border-slate-200 transition">+ Фото</button>
+      </div>
+    </div>
   </div>
 
   <!-- Модальное окно настроек профиля -->
@@ -273,10 +306,10 @@
     </div>
   </div>
 
-  <!-- Модальное окно создания события -->
+  <!-- Модальное окно создания / редактирования события -->
   <div id="event-modal" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="glass bg-white/90 rounded-3xl p-6 w-full max-w-sm space-y-4">
-      <h3 class="font-bold text-lg">Новое событие</h3>
+    <div class="glass bg-white/95 rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+      <h3 id="event-modal-title" class="font-bold text-lg">Новое событие</h3>
       <input id="ev-title" type="text" placeholder="Название события" class="w-full p-3 rounded-xl glass text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
       
       <div id="ev-date-container">
@@ -292,6 +325,7 @@
 
       <div class="flex gap-2 pt-2">
         <button onclick="saveEvent()" class="flex-1 bg-red-600 text-white py-2.5 rounded-full text-sm font-medium shadow-md transition">Сохранить</button>
+        <button id="delete-event-btn" onclick="deleteEvent()" class="hidden bg-red-100 text-red-600 hover:bg-red-200 px-4 py-2.5 rounded-full text-sm font-medium transition">Удалить</button>
         <button onclick="toggleModal('event-modal')" class="flex-1 bg-slate-200 py-2.5 rounded-full text-sm font-medium transition">Отмена</button>
       </div>
     </div>
@@ -364,6 +398,10 @@
     let currentAlbumCols = 3;
     const ZOOM_MODES = [1, 4, 9, 12];
     let currentZoomIndex = 0; 
+    let editingEventId = null;
+
+    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+    const monthsGenitive = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
 
     window.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await db.auth.getSession();
@@ -376,6 +414,16 @@
       initCalendarTouchEvents();
       initAlbumTouchEvents();
     });
+
+    function formatDateRussian(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      const year = parts[0];
+      const monthIdx = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      return `${day} ${monthsGenitive[monthIdx]} ${year}`;
+    }
 
     function toggleMenu(event) {
       event.stopPropagation();
@@ -446,6 +494,8 @@
         document.getElementById('nav').classList.remove('hidden');
         showScreen('dashboard');
         switchTab('dashboard');
+        await fetchAllPhotos();
+        await fetchAllEvents();
         renderDashboard();
       }
     }
@@ -539,7 +589,6 @@
         document.getElementById('p2-avatar-placeholder').classList.add('hidden');
       }
 
-      await fetchAllEvents();
       renderUpcomingDashboardEvents();
     }
 
@@ -581,7 +630,7 @@
       const container = document.getElementById('ev-date-container');
 
       if (isYearly) {
-        const monthsOptions = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
+        const monthsOptions = monthNames
           .map((m, idx) => `<option value="${String(idx + 1).padStart(2, '0')}">${m}</option>`).join('');
         let daysOptions = '';
         for (let d = 1; d <= 31; d++) daysOptions += `<option value="${String(d).padStart(2, '0')}">${d}</option>`;
@@ -599,6 +648,11 @@
     async function fetchAllEvents() {
       const { data } = await db.from('events').select('*').eq('pair_id', currentPair.id);
       allPairEvents = data || [];
+    }
+
+    async function fetchAllPhotos() {
+      const { data: photos } = await db.from('photos').select('*').eq('pair_id', currentPair.id).order('photo_date', { ascending: false });
+      loadedPhotosCache = photos || [];
     }
 
     function getCalculatedEventsForYear(year) {
@@ -639,32 +693,37 @@
       return events;
     }
 
+    // Показывать даты только ближайшего 1 месяца (30 дней) + фиксированное место под дату
     function renderUpcomingDashboardEvents() {
-      const currentYear = new Date().getFullYear();
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      
+      const next30Days = new Date();
+      next30Days.setDate(today.getDate() + 30);
+      const next30DaysStr = next30Days.toISOString().split('T')[0];
+
+      const currentYear = today.getFullYear();
       const yearEvents = [...getCalculatedEventsForYear(currentYear), ...getCalculatedEventsForYear(currentYear + 1)];
-      const today = new Date().toISOString().split('T')[0];
-      const sorted = yearEvents.filter(e => e.event_date >= today).sort((a, b) => a.event_date.localeCompare(b.event_date)).slice(0, 5);
+      
+      const sorted = yearEvents
+        .filter(e => e.event_date >= todayStr && e.event_date <= next30DaysStr)
+        .sort((a, b) => a.event_date.localeCompare(b.event_date));
 
       const list = document.getElementById('upcoming-events');
-      list.innerHTML = sorted.length ? '' : '<p class="text-xs text-slate-400">Пока нет важных дат</p>';
+      list.innerHTML = sorted.length ? '' : '<p class="text-xs text-slate-400 py-2 text-center">В ближайший месяц важных дат нет</p>';
+      
       sorted.forEach(ev => {
         list.innerHTML += `
-          <div class="flex justify-between items-center bg-white/40 p-3 rounded-2xl">
-            <div class="font-semibold text-slate-800">${ev.title}</div>
-            <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">${ev.event_date}</span>
+          <div class="flex justify-between items-center bg-white/40 p-3 rounded-2xl gap-3">
+            <div class="font-semibold text-slate-800 text-sm truncate flex-1 min-w-0">${ev.title}</div>
+            <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 min-w-[110px] text-center">${ev.event_date}</span>
           </div>`;
       });
     }
 
     // --- КАЛЕНДАРЬ ---
-    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
-
     function renderCalendar() {
       const monthsCount = ZOOM_MODES[currentZoomIndex];
-      const btn = document.getElementById('zoom-toggle-btn');
-      
-      const labels = { 1: '1 Месяц', 4: '4 Месяца (2×2)', 9: '9 Месяцев (3×3)', 12: '12 Месяцев (3×4)' };
-      btn.innerText = labels[monthsCount];
 
       if (monthsCount === 1) {
         document.getElementById('single-month-view').classList.remove('hidden');
@@ -700,16 +759,16 @@
       for (let day = 1; day <= totalDays; day++) {
         const fullDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const hasEvent = eventsForMonth.some(e => e.event_date === fullDateStr);
+        const hasPhotos = loadedPhotosCache.some(p => p.photo_date === fullDateStr);
         const isToday = fullDateStr === todayStr;
 
-        let bgClass = "bg-white/30 hover:bg-white/60";
+        let bgClass = "bg-white/30 hover:bg-white/60 text-slate-800";
         if (isToday) bgClass = "bg-red-600 text-white font-bold";
-        else if (hasEvent) bgClass = "bg-red-100 text-red-600 font-semibold border border-red-300";
 
         grid.innerHTML += `
-          <div class="h-10 flex flex-col items-center justify-center rounded-xl text-xs ${bgClass} transition cursor-pointer" onclick="selectCalendarDay('${fullDateStr}')">
+          <div class="h-10 flex flex-col items-center justify-center rounded-xl text-xs ${bgClass} transition cursor-pointer relative" onclick="selectCalendarDay('${fullDateStr}')">
             <span>${day}</span>
-            ${hasEvent && !isToday ? '<span class="w-1 h-1 bg-red-500 rounded-full mt-0.5"></span>' : ''}
+            ${(hasEvent || hasPhotos) && !isToday ? '<span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-0.5"></span>' : ''}
           </div>`;
       }
 
@@ -720,11 +779,17 @@
       let startMonth = calendarDate.getMonth();
       let startYear = calendarDate.getFullYear();
 
-      if (count === 12) {
-        startMonth = 0;
-        document.getElementById('calendar-month-year').innerText = `Год ${startYear}`;
+      if (count === 12) startMonth = 0;
+
+      const endTotalMonths = startMonth + count - 1;
+      const endMonth = endTotalMonths % 12;
+      const endYear = startYear + Math.floor(endTotalMonths / 12);
+
+      // Масштабирование названия месяцев без лишних слов ("Январь — Апрель 2026")
+      if (startYear === endYear) {
+        document.getElementById('calendar-month-year').innerText = `${monthNames[startMonth]} — ${monthNames[endMonth]} ${startYear}`;
       } else {
-        document.getElementById('calendar-month-year').innerText = `${count} Мес. (${monthNames[startMonth]} ${startYear})`;
+        document.getElementById('calendar-month-year').innerText = `${monthNames[startMonth]} ${startYear} — ${monthNames[endMonth]} ${endYear}`;
       }
 
       const container = document.getElementById('multi-month-view');
@@ -753,9 +818,12 @@
         for (let day = 1; day <= totalDays; day++) {
           const fullDateStr = `${y}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           const hasEvent = eventsForMonth.some(e => e.event_date === fullDateStr);
+          const hasPhotos = loadedPhotosCache.some(p => p.photo_date === fullDateStr);
+
           daysGrid += `
-            <div class="text-center py-0.5 text-[8px] sm:text-[9px] ${hasEvent ? 'bg-red-100 font-bold text-red-600 rounded' : 'text-slate-600'}">
-              ${day}
+            <div class="text-center py-0.5 text-[8px] sm:text-[9px] text-slate-700 relative flex flex-col items-center justify-center cursor-pointer" onclick="selectCalendarDay('${fullDateStr}')">
+              <span>${day}</span>
+              ${(hasEvent || hasPhotos) ? '<span class="w-1 h-1 bg-red-500 rounded-full"></span>' : ''}
             </div>`;
         }
 
@@ -804,14 +872,10 @@
           const diff = currentDistance - initialPinchDistance;
 
           if (diff < -40) {
-            if (currentZoomIndex < ZOOM_MODES.length - 1) {
-              cycleCalendarZoom(1);
-            }
+            if (currentZoomIndex < ZOOM_MODES.length - 1) cycleCalendarZoom(1);
             initialPinchDistance = null;
           } else if (diff > 40) {
-            if (currentZoomIndex > 0) {
-              cycleCalendarZoom(-1);
-            }
+            if (currentZoomIndex > 0) cycleCalendarZoom(-1);
             initialPinchDistance = null;
           }
         }
@@ -842,9 +906,9 @@
 
       filtered.forEach(ev => {
         list.innerHTML += `
-          <div class="flex justify-between items-center bg-white/40 p-3 rounded-2xl">
-            <div class="font-semibold text-slate-800 text-sm">${ev.title}</div>
-            <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">${ev.event_date}</span>
+          <div class="flex justify-between items-center bg-white/40 p-3 rounded-2xl gap-3">
+            <div class="font-semibold text-slate-800 text-sm truncate flex-1 min-w-0">${ev.title}</div>
+            <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 min-w-[110px] text-center">${ev.event_date}</span>
           </div>`;
       });
     }
@@ -859,9 +923,110 @@
       renderCalendar();
     }
 
-    function selectCalendarDay(dateStr) {
-      const isYearly = document.getElementById('ev-yearly').checked;
-      if (!isYearly) document.getElementById('ev-date').value = dateStr;
+    // Нажатие на дату в календаре: Открывает фотки/события дня или окно добавления
+    async function selectCalendarDay(dateStr) {
+      const photosOnDate = loadedPhotosCache.filter(p => p.photo_date === dateStr);
+      const year = parseInt(dateStr.split('-')[0], 10);
+      const yearEvents = getCalculatedEventsForYear(year);
+      const eventOnDate = yearEvents.find(e => e.event_date === dateStr);
+
+      if (photosOnDate.length > 0 || (eventOnDate && eventOnDate.is_auto)) {
+        openDayViewModal(dateStr, photosOnDate, eventOnDate);
+      } else if (eventOnDate && !eventOnDate.is_auto) {
+        openEditEventModal(eventOnDate);
+      } else {
+        openAddEventModal(dateStr);
+      }
+    }
+
+    function openDayViewModal(dateStr, photos, event) {
+      document.getElementById('day-modal-title').innerText = formatDateRussian(dateStr);
+
+      const eventSec = document.getElementById('day-modal-event-section');
+      if (event) {
+        eventSec.innerHTML = `
+          <div class="bg-red-50/80 p-3 rounded-2xl border border-red-200/60 flex justify-between items-center mb-3">
+            <div>
+              <div class="font-bold text-sm text-red-900">${event.title}</div>
+              ${event.description ? `<div class="text-xs text-red-700 mt-1">${event.description}</div>` : ''}
+            </div>
+            ${!event.is_auto ? `<button onclick="toggleModal('day-view-modal'); openEditEventModalById('${event.id}')" class="text-xs bg-red-600 text-white px-3 py-1.5 rounded-full font-medium shadow">Изменить</button>` : '<span class="text-[10px] bg-red-200/80 text-red-700 px-2 py-0.5 rounded-full font-semibold">Праздник</span>'}
+          </div>`;
+      } else {
+        eventSec.innerHTML = '';
+      }
+
+      const photosSec = document.getElementById('day-modal-photos-section');
+      if (photos && photos.length > 0) {
+        let photosGrid = `<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">`;
+        photos.forEach(p => {
+          photosGrid += `
+            <div class="aspect-square rounded-xl overflow-hidden shadow-sm relative group">
+              <img src="${p.photo_url}" class="w-full h-full object-cover">
+              ${p.caption ? `<div class="absolute inset-x-0 bottom-0 bg-black/60 text-white text-[10px] p-1 truncate">${p.caption}</div>` : ''}
+            </div>`;
+        });
+        photosGrid += `</div>`;
+        photosSec.innerHTML = `<h4 class="text-xs font-bold text-slate-500 uppercase">Фотографии этого дня (${photos.length})</h4>${photosGrid}`;
+      } else {
+        photosSec.innerHTML = '<p class="text-xs text-slate-400 py-2">Фотографий за этот день нет.</p>';
+      }
+
+      const addEvBtn = document.getElementById('day-modal-add-event-btn');
+      if (event && !event.is_auto) {
+        addEvBtn.innerText = "Изменить событие";
+        addEvBtn.onclick = () => { toggleModal('day-view-modal'); openEditEventModal(event); };
+      } else {
+        addEvBtn.innerText = "+ Событие";
+        addEvBtn.onclick = () => { toggleModal('day-view-modal'); openAddEventModal(dateStr); };
+      }
+
+      document.getElementById('ph-date').value = dateStr;
+      toggleModal('day-view-modal');
+    }
+
+    function openEditEventModalById(eventId) {
+      const ev = allPairEvents.find(e => e.id === eventId);
+      if (ev) openEditEventModal(ev);
+    }
+
+    function openAddEventModal(dateStr = '') {
+      editingEventId = null;
+      document.getElementById('event-modal-title').innerText = "Новое событие";
+      document.getElementById('ev-title').value = '';
+      document.getElementById('ev-desc').value = '';
+      document.getElementById('ev-yearly').checked = false;
+      toggleYearlyOption();
+
+      if (dateStr) {
+        document.getElementById('ev-date').value = dateStr;
+      }
+
+      document.getElementById('delete-event-btn').classList.add('hidden');
+      toggleModal('event-modal');
+    }
+
+    function openEditEventModal(event) {
+      editingEventId = event.id;
+      document.getElementById('event-modal-title').innerText = "Редактировать событие";
+      document.getElementById('ev-title').value = event.title || '';
+      document.getElementById('ev-desc').value = event.description || '';
+      document.getElementById('ev-yearly').checked = !!event.is_yearly;
+      toggleYearlyOption();
+
+      if (event.is_yearly) {
+        const parts = event.event_date.split('-');
+        if (parts.length >= 2) {
+          const month = parts.length === 3 ? parts[1] : parts[0];
+          const day = parts.length === 3 ? parts[2] : parts[1];
+          if (document.getElementById('ev-month')) document.getElementById('ev-month').value = month;
+          if (document.getElementById('ev-day')) document.getElementById('ev-day').value = day;
+        }
+      } else {
+        if (document.getElementById('ev-date')) document.getElementById('ev-date').value = event.event_date;
+      }
+
+      document.getElementById('delete-event-btn').classList.remove('hidden');
       toggleModal('event-modal');
     }
 
@@ -883,14 +1048,30 @@
 
       if (!title) return alert("Введите название");
 
-      await db.from('events').insert([{ pair_id: currentPair.id, title, event_date: date, description: desc, is_yearly: isYearly }]);
+      if (editingEventId) {
+        await db.from('events').update({ title, event_date: date, description: desc, is_yearly: isYearly }).eq('id', editingEventId);
+      } else {
+        await db.from('events').insert([{ pair_id: currentPair.id, title, event_date: date, description: desc, is_yearly: isYearly }]);
+      }
+
       toggleModal('event-modal');
       await fetchAllEvents();
       renderUpcomingDashboardEvents();
       renderCalendar();
     }
 
-    // --- ФОТОАЛЬБОМ И ЖЕСТЫ ---
+    async function deleteEvent() {
+      if (!editingEventId) return;
+      if (!confirm("Удалить это событие?")) return;
+
+      await db.from('events').delete().eq('id', editingEventId);
+      toggleModal('event-modal');
+      await fetchAllEvents();
+      renderUpcomingDashboardEvents();
+      renderCalendar();
+    }
+
+    // --- ФОТОАЛЬБОМ, РАЗДЕЛЕНИЕ ПО ДНЯМ И ЗУМ ---
     function handleFileSelect(event) {
       const files = Array.from(event.target.files);
       files.forEach(file => {
@@ -955,12 +1136,12 @@
           await db.from('photos').insert([{ pair_id: currentPair.id, photo_url: publicUrl, photo_date: date, caption }]);
         }
 
-        await db.from('events').insert([{ pair_id: currentPair.id, title: `📸 ${caption || `Добавлено фото (${selectedFiles.length})`}`, event_date: date }]);
-
         closePhotoModal();
-        loadPhotos();
+        await fetchAllPhotos();
         await fetchAllEvents();
+        renderPhotosGrid();
         renderUpcomingDashboardEvents();
+        renderCalendar();
       } catch (err) {
         alert("Ошибка при загрузке: " + err.message);
       } finally {
@@ -968,15 +1149,8 @@
       }
     }
 
-    async function loadPhotos() {
-      const { data: photos } = await db.from('photos').select('*').eq('pair_id', currentPair.id).order('photo_date', { ascending: false });
-      loadedPhotosCache = photos || [];
-      renderPhotosGrid();
-    }
-
     function changeAlbumCols(delta) {
       currentAlbumCols = Math.min(6, Math.max(2, currentAlbumCols + delta));
-      document.getElementById('album-cols-indicator').innerText = `${currentAlbumCols} в ряд`;
       renderPhotosGrid();
     }
 
@@ -1016,41 +1190,67 @@
       }, { passive: true });
     }
 
+    // Фотоальбом: Разделение по дням
     function renderPhotosGrid() {
-      const grid = document.getElementById('photos-grid');
-      grid.innerHTML = '';
-      grid.style.gridTemplateColumns = `repeat(${currentAlbumCols}, minmax(0, 1fr))`;
+      const container = document.getElementById('photos-grouped-container');
+      container.innerHTML = '';
 
       if (!loadedPhotosCache || loadedPhotosCache.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-sm">В альбоме пока нет фотографий. Нажмите "+ Фото", чтобы добавить первые кадры.</div>`;
+        container.innerHTML = `<div class="text-center py-12 text-slate-400 text-sm">В альбоме пока нет фотографий. Нажмите "+ Фото", чтобы добавить первые кадры.</div>`;
         return;
       }
 
-      loadedPhotosCache.forEach((ph, idx) => {
-        const div = document.createElement('div');
-        div.className = "album-card glass rounded-2xl overflow-hidden shadow-sm flex flex-col relative group cursor-pointer";
-        div.style.opacity = '0';
-        div.style.transform = 'scale(0.9) translateY(10px)';
+      // Группировка фото по датам
+      const grouped = {};
+      loadedPhotosCache.forEach(ph => {
+        if (!grouped[ph.photo_date]) grouped[ph.photo_date] = [];
+        grouped[ph.photo_date].push(ph);
+      });
 
-        div.innerHTML = `
-          <img src="${ph.photo_url}" class="w-full h-full object-cover">
-          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 flex flex-col justify-end text-white opacity-0 group-hover:opacity-100 transition">
-            <span class="text-[10px] text-red-300 font-medium">${ph.photo_date}</span>
-            ${ph.caption ? `<p class="text-xs font-medium truncate">${ph.caption}</p>` : ''}
-          </div>`;
-        
-        grid.appendChild(div);
+      const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
-        setTimeout(() => {
-          requestAnimationFrame(() => {
-            div.style.opacity = '1';
-            div.style.transform = 'scale(1) translateY(0)';
-          });
-        }, idx * 30);
+      sortedDates.forEach(dateStr => {
+        const dateSection = document.createElement('div');
+        dateSection.className = "space-y-2";
+
+        dateSection.innerHTML = `
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2 pt-2">
+            <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
+            ${formatDateRussian(dateStr)}
+          </h3>`;
+
+        const grid = document.createElement('div');
+        grid.className = "album-grid";
+        grid.style.gridTemplateColumns = `repeat(${currentAlbumCols}, minmax(0, 1fr))`;
+
+        grouped[dateStr].forEach((ph, idx) => {
+          const card = document.createElement('div');
+          card.className = "album-card glass rounded-2xl overflow-hidden shadow-sm flex flex-col relative group cursor-pointer";
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.9) translateY(10px)';
+
+          card.innerHTML = `
+            <img src="${ph.photo_url}" class="w-full h-full object-cover">
+            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 flex flex-col justify-end text-white opacity-0 group-hover:opacity-100 transition">
+              ${ph.caption ? `<p class="text-xs font-medium truncate">${ph.caption}</p>` : ''}
+            </div>`;
+
+          grid.appendChild(card);
+
+          setTimeout(() => {
+            requestAnimationFrame(() => {
+              card.style.opacity = '1';
+              card.style.transform = 'scale(1) translateY(0)';
+            });
+          }, idx * 20);
+        });
+
+        dateSection.appendChild(grid);
+        container.appendChild(dateSection);
       });
     }
 
-    // --- ВСПOМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+    // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
     function showScreen(id) {
       ['auth-screen', 'pair-setup', 'dashboard', 'calendar', 'album'].forEach(s => document.getElementById(s)?.classList.add('hidden'));
       document.getElementById(id).classList.remove('hidden');
@@ -1062,7 +1262,7 @@
       updatePillPosition(tabId);
 
       if (tabId === 'calendar') renderCalendar();
-      if (tabId === 'album') loadPhotos();
+      if (tabId === 'album') renderPhotosGrid();
     }
 
     function toggleModal(id) {
