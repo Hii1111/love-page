@@ -658,12 +658,10 @@
     function getCalculatedEventsForYear(year) {
       const events = [];
       const autoHolidays = [
-        { title: "🎄 Новый Год (31 Декабря — 1 Января)", date: `${year}-01-01` },
+        { title: "🎄 Новый Год ", date: `${year}-01-01` },
         { title: "❤️ День Святого Валентина", date: `${year}-02-14` },
         { title: "🛡️ 23 Февраля", date: `${year}-02-23` },
         { title: "💐 8 Марта", date: `${year}-03-08` },
-        { title: "🌿 1 Мая", date: `${year}-05-01` },
-        { title: "🎆 9 Мая", date: `${year}-05-09` }
       ];
       autoHolidays.forEach(h => events.push({ title: h.title, event_date: h.date, is_auto: true }));
 
